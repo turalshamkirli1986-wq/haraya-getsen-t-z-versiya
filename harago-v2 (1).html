@@ -1,0 +1,3402 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta name="theme-color" content="#0a0e1a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>HaraGo AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ===== RESET & BASE ===== */
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:#0a0e1a;color:#f0f4ff;font-family:'DM Sans',sans-serif}
+
+/* ===== CSS VARS ===== */
+:root{
+  --bg:#0a0e1a;
+  --surface:#111827;
+  --surface2:#1a2235;
+  --border:rgba(255,255,255,0.08);
+  --text:#f0f4ff;
+  --text2:rgba(240,244,255,0.5);
+  --accent:#4f8eff;
+  --accent2:#a855f7;
+  --orange:#ff9040;
+  --green:#34d399;
+  --red:#f87171;
+  --r:1.7rem; /* border radius */
+}
+[data-theme="light"]{
+  --bg:#f5f7ff;
+  --surface:#ffffff;
+  --surface2:#eef1f8;
+  --border:rgba(0,0,0,0.08);
+  --text:#0a0e1a;
+  --text2:rgba(10,14,26,0.5);
+}
+
+/* ===== APP SHELL ===== */
+#app{height:100vh;display:flex;flex-direction:column;max-width:480px;margin:0 auto;position:relative}
+
+/* ===== HEADER ===== */
+#header{
+  padding:env(safe-area-inset-top,14px) 16px 12px;
+  padding-top:max(env(safe-area-inset-top),14px);
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--bg);
+  border-bottom:1px solid var(--border);
+  position:relative;z-index:50;
+  gap:10px;
+}
+.logo{display:flex;align-items:center;gap:8px;text-decoration:none}
+.logo-icon{width:34px;height:34px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.logo-text{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--text)}
+.logo-text span{color:var(--accent)}
+#searchBar{
+  flex:1;display:flex;align-items:center;gap:8px;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:12px;padding:8px 12px;cursor:text;
+  transition:border-color 0.2s;
+}
+#searchBar:focus-within{border-color:var(--accent)}
+#searchBar input{
+  flex:1;background:none;border:none;outline:none;
+  font-size:14px;color:var(--text);font-family:'DM Sans',sans-serif;
+}
+#searchBar input::placeholder{color:var(--text2)}
+.header-btns{display:flex;gap:6px}
+.hbtn{
+  width:36px;height:36px;border-radius:10px;border:1px solid var(--border);
+  background:var(--surface);display:flex;align-items:center;justify-content:center;
+  cursor:pointer;font-size:16px;flex-shrink:0;color:var(--text);
+  transition:background 0.15s;
+}
+.hbtn:active{background:var(--surface2)}
+
+/* ===== SCREENS ===== */
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;transition:transform 0.32s cubic-bezier(0.4,0,0.2,1),opacity 0.32s;overflow:hidden}
+.screen.hidden{transform:translateX(100%);opacity:0;pointer-events:none}
+.screen.slide-up{transform:translateY(100%);opacity:0;pointer-events:none}
+.screen-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:80px}
+.screen-body::-webkit-scrollbar{display:none}
+
+/* ===== HOME SCREEN ===== */
+#homeScreen{background:var(--bg)}
+
+/* Hero banner */
+.hero{
+  padding:16px 16px 20px;
+  background:linear-gradient(160deg,#0a0e1a 0%,#111827 60%,#0f1629 100%);
+  position:relative;overflow:hidden;
+}
+.hero::before{
+  content:'';position:absolute;top:-60px;right:-40px;
+  width:200px;height:200px;
+  background:radial-gradient(circle,rgba(79,142,255,0.12),transparent 70%);
+  border-radius:50%;
+}
+.hero-greeting{font-size:13px;color:var(--text2);margin-bottom:2px}
+.hero-title{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--text);line-height:1.2;margin-bottom:14px}
+.hero-title em{font-style:normal;color:var(--accent)}
+
+/* Quick prompts */
+.quick-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px}
+.quick-row::-webkit-scrollbar{display:none}
+.qpill{
+  flex-shrink:0;background:var(--surface);border:1px solid var(--border);
+  border-radius:20px;padding:7px 14px;font-size:12px;font-weight:500;
+  color:var(--text2);cursor:pointer;white-space:nowrap;transition:all 0.15s;
+}
+.qpill:active,.qpill:hover{background:var(--accent);border-color:var(--accent);color:white}
+
+/* Section */
+.section{padding:16px 16px 0}
+.section-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.section-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:var(--text)}
+.section-link{font-size:12px;color:var(--accent);cursor:pointer;font-weight:600}
+
+/* City cards — horizontal scroll */
+.city-scroll{display:flex;gap:10px;overflow-x:auto;padding:0 16px 2px}
+.city-scroll::-webkit-scrollbar{display:none}
+.city-card{
+  flex-shrink:0;width:130px;border-radius:var(--r);overflow:hidden;
+  cursor:pointer;position:relative;background:var(--surface);
+  transition:transform 0.2s;
+}
+.city-card:active{transform:scale(0.97)}
+.city-card-img{width:100%;height:95px;object-fit:cover;display:block;background:var(--surface2)}
+.city-card-overlay{position:absolute;bottom:0;left:0;right:0;padding:8px 10px;background:linear-gradient(to top,rgba(0,0,0,0.8),transparent)}
+.city-card-name{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:white}
+.city-card-tag{font-size:9px;color:rgba(255,255,255,0.7);margin-top:1px}
+
+/* City grid */
+.city-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px}
+.city-tile{
+  background:var(--surface);border-radius:var(--r);overflow:hidden;
+  cursor:pointer;position:relative;transition:transform 0.18s;
+}
+.city-tile:active{transform:scale(0.97)}
+.city-tile-img{width:100%;height:90px;object-fit:cover;display:block;background:var(--surface2)}
+.city-tile-body{padding:8px 10px 10px}
+.city-tile-flag{font-size:16px;margin-bottom:2px}
+.city-tile-name{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--text)}
+.city-tile-tag{font-size:10px;color:var(--text2);margin-top:1px}
+.city-tile-weather{font-size:10px;color:var(--accent);margin-top:4px;font-weight:600}
+
+/* ===== AI SCREEN ===== */
+#aiScreen{background:var(--bg)}
+.ai-header{
+  padding:env(safe-area-inset-top,14px) 16px 12px;
+  padding-top:max(env(safe-area-inset-top),14px);
+  display:flex;align-items:center;gap:10px;
+  background:var(--bg);border-bottom:1px solid var(--border);
+}
+.ai-back{width:36px;height:36px;border-radius:10px;border:1px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;flex-shrink:0}
+.ai-provider-badge{display:flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:5px 12px;cursor:pointer}
+.ai-provider-dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0}
+.ai-provider-name{font-size:12px;font-weight:600;color:var(--text)}
+
+.ai-messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+.ai-messages::-webkit-scrollbar{display:none}
+
+/* Messages */
+.msg{max-width:85%;animation:msgIn 0.2s ease}
+@keyframes msgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.msg-user{align-self:flex-end;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:18px 18px 4px 18px;padding:10px 14px;font-size:14px;color:white;line-height:1.5}
+.msg-ai{align-self:flex-start;background:var(--surface);border:1px solid var(--border);border-radius:4px 18px 18px 18px;padding:12px 14px;font-size:14px;color:var(--text);line-height:1.6}
+.msg-ai h2,.msg-ai h3{font-family:'Syne',sans-serif;font-size:14px;margin:8px 0 4px;color:var(--text)}
+.msg-ai strong{font-weight:600;color:var(--text)}
+.msg-ai a{color:var(--accent);text-decoration:none}
+.msg-ai ul,.msg-ai ol{padding-left:16px;margin:4px 0}
+.msg-ai li{margin-bottom:3px}
+.msg-ai hr{border:none;border-top:1px solid var(--border);margin:8px 0}
+.msg-ai table{width:100%;border-collapse:collapse;font-size:12px;margin:6px 0}
+.msg-ai td,.msg-ai th{padding:5px 8px;border:1px solid var(--border);text-align:left}
+.msg-ai th{background:var(--surface2);font-weight:600}
+
+/* Typing indicator */
+.typing{align-self:flex-start;background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:12px 16px;display:flex;gap:5px;align-items:center}
+.typing span{width:6px;height:6px;border-radius:50%;background:var(--text2);animation:bounce 1.2s infinite}
+.typing span:nth-child(2){animation-delay:.2s}
+.typing span:nth-child(3){animation-delay:.4s}
+@keyframes bounce{0%,60%,100%{transform:none;opacity:0.5}30%{transform:translateY(-5px);opacity:1}}
+
+/* Plan mode chips */
+.plan-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.plan-chip{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:6px 12px;font-size:12px;color:var(--text2);cursor:pointer;transition:all 0.15s}
+.plan-chip.sel{background:var(--accent);border-color:var(--accent);color:white}
+
+/* AI Input bar */
+.ai-input-bar{
+  padding:10px 12px;padding-bottom:max(env(safe-area-inset-bottom),10px);
+  background:var(--bg);border-top:1px solid var(--border);
+  display:flex;align-items:flex-end;gap:8px;
+}
+.ai-inp-wrap{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:10px 12px;display:flex;align-items:flex-end;gap:8px;transition:border-color 0.2s}
+.ai-inp-wrap:focus-within{border-color:var(--accent)}
+#aiInput{flex:1;background:none;border:none;outline:none;font-size:14px;color:var(--text);font-family:'DM Sans',sans-serif;resize:none;max-height:100px;line-height:1.4}
+#aiInput::placeholder{color:var(--text2)}
+.ai-mic{width:30px;height:30px;border-radius:8px;background:none;border:none;cursor:pointer;font-size:18px;color:var(--text2);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ai-mic.active{color:var(--red);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+.ai-send{
+  width:42px;height:42px;border-radius:12px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;transition:opacity 0.15s;
+}
+.ai-send:disabled{opacity:0.5}
+.ai-send svg{width:18px;height:18px;fill:white}
+
+/* Quick questions in AI */
+.ai-quick{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.ai-q{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:7px 13px;font-size:12px;color:var(--text2);cursor:pointer;transition:all 0.15s;white-space:nowrap}
+.ai-q:active{background:var(--accent);border-color:var(--accent);color:white}
+
+/* ===== CITY SCREEN ===== */
+#cityScreen{background:var(--bg)}
+.city-banner{position:relative;height:220px;overflow:hidden}
+.city-banner-img{width:100%;height:100%;object-fit:cover}
+.city-banner-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.1) 0%,rgba(0,0,0,0.7) 100%)}
+.city-banner-back{position:absolute;top:max(env(safe-area-inset-top),14px);left:14px;width:36px;height:36px;border-radius:10px;background:rgba(0,0,0,0.5);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;color:white}
+.city-banner-info{position:absolute;bottom:16px;left:16px;right:16px}
+.city-banner-flag{font-size:24px;margin-bottom:4px}
+.city-banner-name{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:white}
+.city-banner-tag{font-size:12px;color:rgba(255,255,255,0.7);margin-top:2px}
+.city-banner-weather{position:absolute;bottom:16px;right:16px;background:rgba(0,0,0,0.5);backdrop-filter:blur(8px);border-radius:10px;padding:6px 10px;font-size:13px;font-weight:700;color:white}
+
+/* City action buttons */
+.city-actions{display:flex;gap:8px;padding:14px 16px;overflow-x:auto}
+.city-actions::-webkit-scrollbar{display:none}
+.cta-btn{
+  flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:4px;
+  background:var(--surface);border:1px solid var(--border);border-radius:14px;
+  padding:10px 14px;cursor:pointer;transition:all 0.15s;min-width:64px;
+}
+.cta-btn:active{background:var(--accent);border-color:var(--accent)}
+.cta-btn:active .cta-icon,.cta-btn:active .cta-label{color:white}
+.cta-icon{font-size:20px}
+.cta-label{font-size:10px;font-weight:600;color:var(--text2);white-space:nowrap}
+
+/* City info sections */
+.city-section{padding:14px 16px 0}
+.city-section-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:var(--text);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+
+/* Place cards */
+.places-grid{display:flex;flex-direction:column;gap:8px}
+.place-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:14px;
+  padding:12px 14px;display:flex;align-items:center;gap:12px;cursor:pointer;
+  transition:background 0.15s;
+}
+.place-card:active{background:var(--surface2)}
+.place-icon{font-size:22px;flex-shrink:0}
+.place-info{flex:1;min-width:0}
+.place-name{font-size:13px;font-weight:600;color:var(--text)}
+.place-meta{font-size:11px;color:var(--text2);margin-top:2px}
+.place-action{font-size:11px;font-weight:700;color:var(--accent)}
+
+/* Currency widget */
+.currency-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;display:flex;align-items:center;justify-content:space-between}
+.currency-left{display:flex;align-items:center;gap:10px}
+.currency-flag{font-size:24px}
+.currency-name{font-size:13px;font-weight:600;color:var(--text)}
+.currency-code{font-size:11px;color:var(--text2)}
+.currency-rate{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--accent)}
+.currency-sub{font-size:10px;color:var(--text2);text-align:right}
+
+/* Book links */
+.book-links{display:flex;flex-direction:column;gap:8px}
+.book-link{
+  display:flex;align-items:center;gap:12px;padding:12px 14px;
+  border-radius:14px;text-decoration:none;transition:opacity 0.15s;
+}
+.book-link:active{opacity:0.8}
+.book-link-icon{font-size:20px;flex-shrink:0}
+.book-link-info{flex:1}
+.book-link-name{font-size:13px;font-weight:700;color:white}
+.book-link-desc{font-size:11px;color:rgba(255,255,255,0.7);margin-top:1px}
+.book-link-arrow{font-size:14px;color:rgba(255,255,255,0.7)}
+
+/* ===== SEARCH OVERLAY ===== */
+#searchOverlay{
+  position:fixed;inset:0;z-index:100;background:var(--bg);
+  display:flex;flex-direction:column;
+  transform:translateY(-100%);opacity:0;transition:all 0.25s;pointer-events:none;
+}
+#searchOverlay.open{transform:none;opacity:1;pointer-events:all}
+.search-input-wrap{display:flex;align-items:center;gap:10px;padding:max(env(safe-area-inset-top),14px) 16px 12px;border-bottom:1px solid var(--border)}
+.search-input-wrap input{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:10px 14px;font-size:15px;color:var(--text);font-family:'DM Sans',sans-serif;outline:none}
+.search-input-wrap input:focus{border-color:var(--accent)}
+.search-cancel{font-size:14px;color:var(--accent);cursor:pointer;white-space:nowrap;font-weight:600}
+.search-results{flex:1;overflow-y:auto;padding:12px 16px}
+.search-results::-webkit-scrollbar{display:none}
+.search-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);cursor:pointer}
+.search-item:active .search-item-name{color:var(--accent)}
+.search-flag{font-size:22px;flex-shrink:0}
+.search-item-name{font-size:14px;font-weight:600;color:var(--text)}
+.search-item-sub{font-size:11px;color:var(--text2)}
+
+/* ===== BOTTOM NAV ===== */
+#bottomNav{
+  display:flex;background:var(--bg);border-top:1px solid var(--border);
+  padding-bottom:max(env(safe-area-inset-bottom),8px);
+  position:relative;z-index:50;
+}
+.nav-tab{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:10px 0;cursor:pointer;transition:color 0.15s;color:var(--text2);
+}
+.nav-tab.active{color:var(--accent)}
+.nav-tab svg{width:22px;height:22px;fill:currentColor;transition:transform 0.2s}
+.nav-tab.active svg{transform:scale(1.1)}
+.nav-tab span{font-size:10px;font-weight:600}
+
+/* ===== NEARBY SCREEN ===== */
+#nearbyScreen{background:var(--bg)}
+.nearby-header{padding:max(env(safe-area-inset-top),14px) 16px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
+.nearby-title{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:var(--text)}
+.nearby-refresh{width:34px;height:34px;border-radius:10px;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px}
+.nearby-list{padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.nearby-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:background 0.15s}
+.nearby-card:active{background:var(--surface2)}
+.nearby-card-icon{font-size:24px;flex-shrink:0;width:44px;height:44px;background:var(--surface2);border-radius:12px;display:flex;align-items:center;justify-content:center}
+.nearby-card-info{flex:1;min-width:0}
+.nearby-card-name{font-size:14px;font-weight:600;color:var(--text)}
+.nearby-card-type{font-size:11px;color:var(--text2);margin-top:2px}
+.nearby-card-dist{font-size:12px;font-weight:600;color:var(--accent);margin-left:auto;flex-shrink:0}
+
+/* ===== TOAST ===== */
+#toast{
+  position:fixed;bottom:96px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:var(--surface);border:1px solid var(--border);border-radius:100px;
+  padding:10px 20px;font-size:13px;font-weight:600;color:var(--text);
+  backdrop-filter:blur(20px);z-index:999;opacity:0;transition:all 0.3s;white-space:nowrap;
+  pointer-events:none;max-width:90vw;text-overflow:ellipsis;overflow:hidden;
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ===== PLAN SCREEN ===== */
+#planScreen{background:var(--bg)}
+.plan-header{padding:max(env(safe-area-inset-top),14px) 16px 12px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border)}
+
+/* ===== SETTINGS OVERLAY ===== */
+#settingsOverlay{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.25s}
+#settingsOverlay.open{opacity:1;pointer-events:all}
+.settings-sheet{background:var(--bg);border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:0 0 max(env(safe-area-inset-bottom),20px);animation:slideUp 0.3s ease;max-height:90vh;overflow-y:auto}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:none}}
+.settings-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:12px auto}
+.settings-row{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--border)}
+.settings-label{font-size:14px;font-weight:600;color:var(--text)}
+.settings-sub{font-size:11px;color:var(--text2);margin-top:2px}
+.settings-val{font-size:13px;color:var(--accent);font-weight:600}
+
+/* API key input */
+.key-input-wrap{padding:0 20px 8px}
+.key-input{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:10px 14px;font-size:13px;color:var(--text);font-family:'DM Sans',sans-serif;outline:none;margin-bottom:8px}
+.key-input:focus{border-color:var(--accent)}
+.key-save-btn{width:100%;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:12px;padding:12px;color:white;font-size:14px;font-weight:700;cursor:pointer}
+
+/* Lang grid */
+.lang-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 20px 8px}
+.lang-opt{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:10px;text-align:center;cursor:pointer;font-size:13px;font-weight:600;color:var(--text2);transition:all 0.15s}
+.lang-opt.active{background:var(--accent);border-color:var(--accent);color:white}
+
+/* ===== UTILS ===== */
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+.flex-center{display:flex;align-items:center;justify-content:center}
+.gap-8{gap:8px}
+.mt-8{margin-top:8px}
+.mt-12{margin-top:12px}
+.text-accent{color:var(--accent)}
+.text-muted{color:var(--text2)}
+
+/* ===== SKELETON ===== */
+.skel{background:linear-gradient(90deg,var(--surface) 25%,var(--surface2) 50%,var(--surface) 75%);background-size:200%;animation:shimmer 1.5s infinite;border-radius:8px}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+/* ===== ROUTE CARD ===== */
+.route-card{background:linear-gradient(135deg,#0f1629,#1a2235);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-top:12px}
+.route-card-header{padding:12px 14px 10px;display:flex;align-items:center;justify-content:space-between}
+.route-card-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--text)}
+.route-open-btn{background:white;border-radius:8px;padding:5px 10px;color:#0a0e1a;font-size:11px;font-weight:800;text-decoration:none;flex-shrink:0}
+.route-stops{padding:0 14px 14px;display:flex;flex-direction:column;gap:8px;position:relative}
+.route-stops::before{content:'';position:absolute;left:19px;top:0;bottom:0;width:2px;background:linear-gradient(to bottom,var(--accent),var(--accent2),transparent)}
+.route-stop{display:flex;align-items:center;gap:10px}
+.route-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;position:relative;z-index:1}
+.route-stop-name{font-size:12px;color:var(--text2);flex:1}
+.route-stop-num{font-size:10px;font-weight:700;color:var(--text2);background:var(--surface);border-radius:5px;padding:1px 5px}
+
+/* scrollbar-free everywhere */
+*{scrollbar-width:none}
+
+/* ===== RESPONSIVE ===== */
+@media(min-width:481px){
+  #app{border-left:1px solid var(--border);border-right:1px solid var(--border)}
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- HEADER -->
+  <div id="header">
+    <a class="logo" href="#" onclick="return false">
+      <div class="logo-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="white"/>
+        </svg>
+      </div>
+      <div class="logo-text">Hara<span>Go</span></div>
+    </a>
+    <div id="searchBar" onclick="openSearch()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="flex-shrink:0">
+        <path d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z" stroke="rgba(240,244,255,0.4)" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <input id="headerSearchInp" placeholder="Şəhər axtar..." readonly>
+    </div>
+    <div class="header-btns">
+      <div class="hbtn" onclick="openSettings()" title="Ayarlar">⚙️</div>
+    </div>
+  </div>
+
+  <!-- SCREENS CONTAINER -->
+  <div style="flex:1;position:relative;overflow:hidden">
+
+    <!-- ===== HOME SCREEN ===== -->
+    <div id="homeScreen" class="screen">
+      <div class="screen-body">
+
+        <!-- Killer Flow Hero -->
+        <div class="hero">
+          <div class="hero-greeting" id="homeGreeting">Salam! 👋</div>
+          <div class="hero-title">Hara <em>getmək</em> istəyirsən?</div>
+
+          <!-- Killer input -->
+          <div id="killerInput" style="background:rgba(255,255,255,0.08);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.15);border-radius:16px;padding:14px;margin-bottom:14px">
+            <textarea id="killerText" placeholder="Məs: 500 AZN büdcə ilə 3 günlük romantik tur" rows="2"
+              style="width:100%;background:none;border:none;outline:none;color:white;font-family:'DM Sans',sans-serif;font-size:15px;resize:none;line-height:1.4"
+              oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"
+              onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();runKillerFlow()}"></textarea>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px">
+              <div style="display:flex;gap:6px;flex-wrap:wrap">
+                <div onclick="setKillerPrompt('500 AZN, 3 gün, vizasız')" style="background:rgba(255,255,255,0.1);border-radius:20px;padding:5px 10px;font-size:11px;color:rgba(255,255,255,0.8);cursor:pointer">💰 Ucuz</div>
+                <div onclick="setKillerPrompt('Romantik, 2 nəfər, dəniz kenarı')" style="background:rgba(255,255,255,0.1);border-radius:20px;padding:5px 10px;font-size:11px;color:rgba(255,255,255,0.8);cursor:pointer">💑 Romantik</div>
+                <div onclick="setKillerPrompt('Ailə ilə, uşaq dostu, 4 gün')" style="background:rgba(255,255,255,0.1);border-radius:20px;padding:5px 10px;font-size:11px;color:rgba(255,255,255,0.8);cursor:pointer">👨‍👩‍👧 Ailə</div>
+                <div onclick="setKillerPrompt('Tarix, mədəniyyət, muzey')" style="background:rgba(255,255,255,0.1);border-radius:20px;padding:5px 10px;font-size:11px;color:rgba(255,255,255,0.8);cursor:pointer">🏛️ Kültür</div>
+              </div>
+              <button onclick="runKillerFlow()" style="background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:12px;padding:10px 18px;color:white;font-family:'Syne',sans-serif;font-weight:800;font-size:14px;cursor:pointer;white-space:nowrap;flex-shrink:0">
+                Plan Al ✨
+              </button>
+            </div>
+          </div>
+
+          <!-- Quick prompts -->
+          <div class="quick-row" id="quickRow">
+            <div class="qpill" onclick="askAI('Bu ay vizasız hara gedə bilərəm?')">🛂 Vizasız</div>
+            <div class="qpill" onclick="askAI('Bakıdan ucuz Avropa tur?')">✈️ Avropa</div>
+            <div class="qpill" onclick="askAI('Çimərliklər üçün ən yaxşı şəhər?')">🏖️ Dəniz</div>
+            <div class="qpill" onclick="askAI('Qışda hara getmək olar?')">❄️ Qış</div>
+          </div>
+        </div>
+
+        <!-- Trending -->
+        <div class="section mt-8">
+          <div class="section-hd">
+            <div class="section-title">🔥 Trend</div>
+            <div class="section-link" onclick="showAllCities()">Hamısı</div>
+          </div>
+        </div>
+        <div class="city-scroll" id="trendScroll"></div>
+
+        <!-- All cities grid -->
+        <div class="section" style="margin-top:20px">
+          <div class="section-hd">
+            <div class="section-title">🌍 Populyar Şəhərlər</div>
+            <div class="section-link" id="cityCount"></div>
+          </div>
+          <div class="city-grid" id="cityGrid"></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ===== AI SCREEN ===== -->
+    <div id="aiScreen" class="screen hidden">
+      <div class="ai-header">
+        <div class="ai-back" onclick="goHome()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <path d="M19 12H5M5 12l7-7M5 12l7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="ai-provider-badge" onclick="openSettings('ai')">
+          <div class="ai-provider-dot" id="aiDot"></div>
+          <span class="ai-provider-name" id="aiProvName">AI</span>
+        </div>
+        <div style="flex:1"></div>
+        <div class="hbtn" onclick="clearChat()" title="Sil">🗑️</div>
+      </div>
+
+      <div class="ai-messages" id="aiMessages"></div>
+
+      <div class="ai-input-bar">
+        <div class="ai-inp-wrap">
+          <textarea id="aiInput" placeholder="Sual yazın..." rows="1"
+            oninput="autoResize(this)"
+            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg()}"></textarea>
+          <div class="ai-mic" id="micBtn" onclick="toggleMic()">🎤</div>
+        </div>
+        <button class="ai-send" id="sendBtn" onclick="sendMsg()">
+          <svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- ===== NEARBY SCREEN ===== -->
+    <div id="nearbyScreen" class="screen hidden">
+      <div class="nearby-header">
+        <div class="ai-back" onclick="goHome()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <path d="M19 12H5M5 12l7-7M5 12l7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="nearby-title">📍 Yaxınlıqdakı Yerlər</div>
+        <div class="nearby-refresh" onclick="loadNearby()">🔄</div>
+      </div>
+      <div class="screen-body" style="padding-bottom:80px">
+        <div class="nearby-list" id="nearbyList">
+          <div style="text-align:center;padding:40px;color:var(--text2);font-size:14px">
+            📍 Yeri müəyyən edir...
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== CITY SCREEN ===== -->
+    <div id="cityScreen" class="screen slide-up">
+      <div class="screen-body">
+        <!-- Banner -->
+        <div class="city-banner">
+          <img id="cityBannerImg" src="" alt="" class="city-banner-img" onerror="this.style.display='none'">
+          <div class="city-banner-overlay"></div>
+          <div class="city-banner-back" onclick="closeCityScreen()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M19 12H5M5 12l7-7M5 12l7 7" stroke="white" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="city-banner-info">
+            <div class="city-banner-flag" id="cityFlag"></div>
+            <div class="city-banner-name" id="cityName"></div>
+            <div class="city-banner-tag" id="cityTagline"></div>
+          </div>
+          <div class="city-banner-weather" id="cityWeatherBadge" style="display:none"></div>
+        </div>
+
+        <!-- Action buttons -->
+        <div class="city-actions">
+          <div class="cta-btn" onclick="askAboutCity('plan')">
+            <span class="cta-icon">🗺️</span>
+            <span class="cta-label">AI Plan</span>
+          </div>
+          <div class="cta-btn" onclick="askAboutCity('görməli')">
+            <span class="cta-icon">👁️</span>
+            <span class="cta-label">Görməli</span>
+          </div>
+          <div class="cta-btn" onclick="askAboutCity('restoran')">
+            <span class="cta-icon">🍽️</span>
+            <span class="cta-label">Yemək</span>
+          </div>
+          <div class="cta-btn" onclick="openCityMap()">
+            <span class="cta-icon">📍</span>
+            <span class="cta-label">Xəritə</span>
+          </div>
+          <div class="cta-btn" onclick="openCityBooking()">
+            <span class="cta-icon">🏨</span>
+            <span class="cta-label">Otel</span>
+          </div>
+          <div class="cta-btn" onclick="openCityTickets()">
+            <span class="cta-icon">✈️</span>
+            <span class="cta-label">Bilet</span>
+          </div>
+        </div>
+
+        <!-- Currency -->
+        <div class="city-section">
+          <div class="city-section-title">💱 Valyuta</div>
+          <div class="currency-card" id="currencyCard">
+            <div style="text-align:center;width:100%;color:var(--text2);font-size:13px">Yüklənir...</div>
+          </div>
+        </div>
+
+        <!-- Quick AI chat about city -->
+        <div class="city-section mt-12">
+          <div class="city-section-title">🤖 AI ilə soruş</div>
+          <div class="ai-quick" id="cityQuickQ"></div>
+        </div>
+
+        <!-- Book links -->
+        <div class="city-section mt-12">
+          <div class="city-section-title">🔗 Bron Et</div>
+          <div class="book-links" id="cityBookLinks"></div>
+        </div>
+
+        <div style="height:30px"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <div id="bottomNav">
+    <div class="nav-tab active" id="navHome" onclick="goHome()">
+      <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+      <span>Əsas</span>
+    </div>
+    <div class="nav-tab" id="navNearby" onclick="openNearby()">
+      <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+      <span>Yaxın</span>
+    </div>
+    <div class="nav-tab" id="navAI" onclick="openAI()">
+      <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg>
+      <span>AI</span>
+    </div>
+    <div class="nav-tab" id="navSaved" onclick="openSavedTrips()">
+      <svg viewBox="0 0 24 24"><path d="M17 3H7c-1.1 0-1.99.9-1.99 2L5 21l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg>
+      <span>Planlar</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- SEARCH OVERLAY -->
+<div id="searchOverlay">
+  <div class="search-input-wrap">
+    <input id="searchInput" type="search" placeholder="Şəhər axtar... Dubai, Paris, Tokyo..." autocomplete="off" oninput="doSearch(this.value)">
+    <div class="search-cancel" onclick="closeSearch()">Bağla</div>
+  </div>
+  <div class="search-results" id="searchResults"></div>
+</div>
+
+<!-- SETTINGS OVERLAY -->
+<div id="settingsOverlay" onclick="if(event.target===this)closeSettings()">
+  <div class="settings-sheet">
+    <div class="settings-handle"></div>
+
+    <div style="padding:0 20px 10px;display:flex;align-items:center;justify-content:space-between">
+      <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--text)">⚙️ Ayarlar</div>
+      <div id="aiStatusBadge" style="font-size:12px;font-weight:700;color:var(--green)">● Yüklənir...</div>
+    </div>
+
+    <!-- Cloudflare Worker Proxy — AI üçün backend -->
+    <div style="margin:0 16px 14px;background:linear-gradient(135deg,rgba(249,115,22,0.1),rgba(234,88,12,0.05));border:1.5px solid rgba(249,115,22,0.3);border-radius:16px;padding:14px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <span style="font-size:20px">☁️</span>
+        <div>
+          <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:var(--text)">Cloudflare Worker URL</div>
+          <div style="font-size:11px;color:var(--text2)">AI açarını gizlətmək üçün — tövsiyə olunur</div>
+        </div>
+        <div id="proxyStatusBadge" style="margin-left:auto;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;background:var(--surface2);color:var(--text2)">Yoxdur</div>
+      </div>
+      <input type="url" id="proxyInput" placeholder="https://harago-ai.AD.workers.dev"
+        style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:13px;color:var(--text);font-family:'DM Sans',sans-serif;outline:none;box-sizing:border-box;margin-bottom:8px">
+      <button onclick="saveProxy()" style="width:100%;background:linear-gradient(135deg,#F97316,#EA580C);border:none;border-radius:12px;padding:12px;color:white;font-family:'Syne',sans-serif;font-weight:800;font-size:14px;cursor:pointer">
+        ☁️ Worker URL Saxla və Test Et
+      </button>
+    </div>
+
+    <!-- ⚡ GROQ -->
+    <div style="margin:0 16px 12px;background:linear-gradient(135deg,rgba(255,144,64,0.1),rgba(255,96,16,0.05));border:1.5px solid rgba(255,144,64,0.3);border-radius:16px;padding:14px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <span style="font-size:20px">⚡</span>
+        <div>
+          <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:var(--text)">Groq — Llama 3.3</div>
+          <div style="font-size:11px;color:var(--text2)">Pulsuz • Gündə 14,400 sorğu • Ən sürətli</div>
+        </div>
+        <div id="groqStatus" style="margin-left:auto;font-size:11px;font-weight:700;color:var(--text2)"></div>
+      </div>
+      <div style="font-size:11px;color:var(--text2);margin-bottom:8px">
+        Açar al: <a href="https://console.groq.com/keys" target="_blank" style="color:var(--orange);font-weight:700">console.groq.com</a> → Sign in → API Keys → Create → kopyala
+      </div>
+      <input class="key-input" type="password" id="groqKeyInput" placeholder="gsk_... buraya yapışdır" style="margin-bottom:8px">
+      <button onclick="saveKey('groq')" style="width:100%;background:linear-gradient(135deg,#FF9040,#FF6010);border:none;border-radius:12px;padding:12px;color:white;font-family:'Syne',sans-serif;font-weight:800;font-size:14px;cursor:pointer">
+        ⚡ Groq Aktiv Et
+      </button>
+    </div>
+
+    <!-- 🔵 GEMINI -->
+    <div style="margin:0 16px 12px;background:linear-gradient(135deg,rgba(66,133,244,0.08),rgba(52,168,83,0.05));border:1.5px solid rgba(66,133,244,0.25);border-radius:16px;padding:14px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <span style="font-size:20px">🔵</span>
+        <div>
+          <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:var(--text)">Google Gemini 2.0</div>
+          <div style="font-size:11px;color:var(--text2)">Pulsuz • Gündə 1,500 sorğu</div>
+        </div>
+        <div id="geminiStatus" style="margin-left:auto;font-size:11px;font-weight:700;color:var(--text2)"></div>
+      </div>
+      <div style="font-size:11px;color:var(--text2);margin-bottom:8px">
+        Açar al: <a href="https://aistudio.google.com/apikey" target="_blank" style="color:#4285F4;font-weight:700">aistudio.google.com/apikey</a> → Get API key
+      </div>
+      <input class="key-input" type="password" id="geminiKeyInput" placeholder="AIza... buraya yapışdır" style="margin-bottom:8px">
+      <button onclick="saveKey('gemini')" style="width:100%;background:linear-gradient(135deg,#4285F4,#34A853);border:none;border-radius:12px;padding:12px;color:white;font-family:'Syne',sans-serif;font-weight:800;font-size:14px;cursor:pointer">
+        🔵 Gemini Aktiv Et
+      </button>
+    </div>
+
+    <!-- 🟢 OPENROUTER (GPT, Llama free) -->
+    <div style="margin:0 16px 12px;background:linear-gradient(135deg,rgba(52,211,153,0.08),rgba(4,120,87,0.05));border:1.5px solid rgba(52,211,153,0.25);border-radius:16px;padding:14px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <span style="font-size:20px">🟢</span>
+        <div>
+          <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:var(--text)">OpenRouter</div>
+          <div style="font-size:11px;color:var(--text2)">GPT-4o, Llama, Mistral — bəziləri pulsuz</div>
+        </div>
+        <div id="orStatus" style="margin-left:auto;font-size:11px;font-weight:700;color:var(--text2)"></div>
+      </div>
+      <select id="orModelSelect" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-size:12px;color:var(--text);outline:none;margin-bottom:8px">
+        <option value="meta-llama/llama-3.3-70b-instruct:free">🦙 Llama 3.3 70B (Pulsuz)</option>
+        <option value="meta-llama/llama-3.1-8b-instruct:free">🦙 Llama 3.1 8B (Pulsuz)</option>
+        <option value="google/gemma-3-27b-it:free">🔵 Gemma 3 27B (Pulsuz)</option>
+        <option value="mistralai/mistral-7b-instruct:free">⚡ Mistral 7B (Pulsuz)</option>
+        <option value="qwen/qwen-2.5-72b-instruct:free">🟡 Qwen 2.5 72B (Pulsuz)</option>
+        <option value="openai/gpt-4o-mini">🟢 GPT-4o Mini (Ödənişli)</option>
+        <option value="openai/gpt-4o">🟢 GPT-4o (Ödənişli)</option>
+        <option value="anthropic/claude-3.5-sonnet">🟠 Claude 3.5 Sonnet (Ödənişli)</option>
+      </select>
+      <div style="font-size:11px;color:var(--text2);margin-bottom:8px">
+        Açar al: <a href="https://openrouter.ai/keys" target="_blank" style="color:var(--green);font-weight:700">openrouter.ai/keys</a> → Create Key → sk-or-...
+      </div>
+      <input class="key-input" type="password" id="orKeyInput" placeholder="sk-or-... buraya yapışdır" style="margin-bottom:8px">
+      <button onclick="saveKey('or')" style="width:100%;background:linear-gradient(135deg,#059669,#047857);border:none;border-radius:12px;padding:12px;color:white;font-family:'Syne',sans-serif;font-weight:800;font-size:14px;cursor:pointer">
+        🟢 OpenRouter Aktiv Et
+      </button>
+    </div>
+
+    <!-- Divider -->
+    <div style="height:1px;background:var(--border);margin:4px 16px 12px"></div>
+
+    <!-- Dark mode + Language -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:0 20px 12px;cursor:pointer" onclick="toggleTheme()">
+      <div style="font-size:14px;font-weight:600;color:var(--text)" id="themeLabel">🌙 Qaranlıq Rejim</div>
+      <div style="font-size:12px;font-weight:700;color:var(--accent)" id="themeVal">Aktiv</div>
+    </div>
+
+    <div class="lang-grid" style="margin:0 16px 20px">
+      <div class="lang-opt active" onclick="setLang('az',this)">🇦🇿 AZ</div>
+      <div class="lang-opt" onclick="setLang('ru',this)">🇷🇺 RU</div>
+      <div class="lang-opt" onclick="setLang('en',this)">🇬🇧 EN</div>
+      <div class="lang-opt" onclick="setLang('tr',this)">🇹🇷 TR</div>
+      <div class="lang-opt" onclick="setLang('ar',this)">🇸🇦 AR</div>
+      <div class="lang-opt" onclick="setLang('de',this)">🇩🇪 DE</div>
+    </div>
+  </div>
+
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script>
+'use strict';
+// =====================
+// DATA (80+ cities, weather, currency, photos)
+// =====================
+const CITIES={
+  dubai:{
+    flag:'🇦🇪',name:'DUBAI',tagline:'LUXURY • ADVENTURE • FUTURE',
+    color:'#FF6B00',bg:'#050f1e',
+    videos:[
+      {tag:'BURJ KHALIFA',title:'Burj Khalifa',desc:'Dünyanın ən hündür binası • 828m • Gecə işıqlanması',emoji:'🏙️',mp4:'20109',dur:'15s'},
+      {tag:'MARINA NIGHT',title:'Dubai Marina',desc:'Gecə həyatı • Yatlar • Işıqlı restoranlar',emoji:'⛵',mp4:'30971',dur:'8s'},
+      {tag:'PALM ISLAND',title:'Palm Jumeirah',desc:'Xurma formasında ada • Atlantis oteli',emoji:'🌴',mp4:'30985',dur:'13s'},
+      {tag:'CITY AERIAL',title:'Downtown Dubai',desc:'Havadan görünüş • İkonik binalar',emoji:'🚁',mp4:'20211',dur:'10s'},
+      {tag:'JBR BEACH',title:'Dubai Beach',desc:'Çimərliklər • Şəhər fonunda',emoji:'🏖️',mp4:'31005',dur:'9s'},
+      {tag:'NIGHT CITY',title:'Gecə Dubai',desc:'Gecə işıqları • Göy qurşağı binalar',emoji:'🌃',mp4:'20115',dur:'11s'},
+    ],
+    places:{
+      tourist:[
+        {name:'Burj Xəlifə',emoji:'🏙️',type:'tourist',desc:'Dünyanın ən hündür binası. 124-cü mərtəbə.',price:'150 AED',rating:'⭐ 4.9',location:'Downtown Dubai',hours:'09:00–22:00',mapQ:'Burj Khalifa Dubai',booking:''},
+        {name:'Palm Jumeirah',emoji:'🌴',type:'tourist',desc:'Xurma formasında süni ada.',price:'Pulsuz',rating:'⭐ 4.7',location:'Palm Jumeirah',hours:'24 saat',mapQ:'Palm Jumeirah Dubai',booking:''},
+        {name:'Səhra Safarisi',emoji:'🐪',type:'tourist',desc:'Qum, dəvə, Bədəvi düşərgəsi.',price:'250 AED',rating:'⭐ 4.8',location:'Dubai Outskirts',hours:'15:00–22:00',mapQ:'Desert Safari Dubai',booking:''},
+        {name:'Dubai Fəvvarəsi',emoji:'⛲',type:'tourist',desc:'Dünyanın ən böyük fəvvarəsi.',price:'Pulsuz',rating:'⭐ 4.8',location:'Downtown Dubai',hours:'18:00–23:00',mapQ:'Dubai Fountain',booking:''},
+      ],
+      restaurant:[
+        {name:'Nobu Dubai',emoji:'🍽️',type:'restaurant',desc:'Dünya şöhrətli Yapon-Peru mətbəxi.',price:'300+ AED',rating:'⭐ 4.8',location:'Atlantis Hotel',hours:'18:00–01:00',mapQ:'Nobu Dubai',booking:'https://www.noburestaurants.com'},
+        {name:'Arabian Tea House',emoji:'🍵',type:'restaurant',desc:'Klassik Ərəb mətbəxi, ənənəvi muhit.',price:'50–120 AED',rating:'⭐ 4.6',location:'Bur Dubai',hours:'07:00–23:00',mapQ:'Arabian Tea House Dubai',booking:''},
+        {name:'Nusr-Et Dubai',emoji:'🥩',type:'restaurant',desc:'Salt Bae rəstoranı. Premium ət şouu.',price:'500+ AED',rating:'⭐ 4.6',location:'Palm Jumeirah',hours:'13:00–01:00',mapQ:'Nusr-Et Dubai',booking:''},
+        {name:'Dhow Cruise',emoji:'🚢',type:'restaurant',desc:'Gəmidə şam yeməyi, Dubai Creek.',price:'180 AED',rating:'⭐ 4.7',location:'Dubai Creek',hours:'19:00–22:00',mapQ:'Dhow Cruise Dubai Creek',booking:''},
+      ],
+      shopping:[
+        {name:'Dubai Mall',emoji:'🛍️',type:'shopping',desc:'1200+ mağaza, akvaryum, buz.',price:'Pulsuz giriş',rating:'⭐ 4.8',location:'Downtown Dubai',hours:'10:00–00:00',mapQ:'Dubai Mall',booking:''},
+        {name:'Qızıl Souk',emoji:'💛',type:'shopping',desc:'350+ zərgər, 10 ton qızıl/gün.',price:'Müxtəlif',rating:'⭐ 4.5',location:'Deira',hours:'10:00–22:00',mapQ:'Gold Souk Dubai',booking:''},
+        {name:'Mall of Emirates',emoji:'⛷️',type:'shopping',desc:'Ski Dubai daxil. 560 mağaza.',price:'Pulsuz giriş',rating:'⭐ 4.7',location:'Al Barsha',hours:'10:00–00:00',mapQ:'Mall of the Emirates Dubai',booking:''},
+      ],
+      hotel:[
+        {name:'Burj Al Arab',emoji:'⛵',type:'hotel',desc:'7 ulduzlu yelkən formalı otel.',price:'5000+ AED/gecə',rating:'⭐ 5.0',location:'Jumeirah Beach',hours:'24 saat',mapQ:'Burj Al Arab Dubai',booking:'https://www.booking.com/hotel/ae/burj-al-arab.html'},
+        {name:'Atlantis The Palm',emoji:'🏨',type:'hotel',desc:'Palm Jumeirahda lüks otel.',price:'1200+ AED/gecə',rating:'⭐ 4.9',location:'Palm Jumeirah',hours:'24 saat',mapQ:'Atlantis The Palm Dubai',booking:'https://www.booking.com/hotel/ae/atlantis-the-palm.html'},
+        {name:'Armani Hotel',emoji:'👔',type:'hotel',desc:'Burj Khalifanın içindəki otel.',price:'2000+ AED/gecə',rating:'⭐ 4.9',location:'Downtown Dubai',hours:'24 saat',mapQ:'Armani Hotel Dubai',booking:'https://www.booking.com/hotel/ae/armani-dubai.html'},
+      ]
+    },
+    quickQ:['Dubai 3 günlük tur planı yaz','Ən ucuz otellər?','Visa lazımdırmı?','Büdcə neçə olmalı?']
+  },
+
+  kahire:{
+    flag:'🇪🇬',name:'KAHİRƏ',tagline:'QƏDIM MISIR • TARİX • ƏFSANƏ',
+    color:'#E8A020',bg:'#120800',
+    videos:[
+      {tag:'PİRAMİDLƏR',title:'Gizə Piramidləri',desc:'Dünyanın 7 möcüzəsindən biri • 4500 il',emoji:'🏺',layers:['#2a1500','#4a2500','#E8A020'],dur:'15s'},
+      {tag:'SFENKS',title:'Böyük Sfenks',desc:'Misirin simvolu • Qədim dünya',emoji:'🦁',layers:['#1a0a00','#3a1500','#FFD700'],dur:'12s'},
+      {tag:'NİL',title:'Nil Çayı',desc:'Dünyanın ən uzun çayı • Gəzinti',emoji:'🛶',layers:['#001a30','#002a50','#40A0FF'],dur:'13s'},
+      {tag:'MUZEY',title:'Misir Muzeyi',desc:'Tutankamon xəzinəsi • Mumiyalar',emoji:'🏛️',layers:['#0a0a1a','#151530','#E8A020'],dur:'11s'},
+      {tag:'BAZAR',title:'Xan əl-Xəlili',desc:'500 illik bazar • Ədviyyat, zərgərlik',emoji:'🕌',layers:['#1a0500','#2a0800','#FF6B00'],dur:'10s'},
+      {tag:'LÜKSÖR',title:'Lüksör Məbədləri',desc:'Qədim Teb • Fironlar şəhəri',emoji:'🏯',layers:['#1a1000','#2a1800','#FFD700'],dur:'14s'},
+    ],
+    places:{
+      tourist:[
+        {name:'Gizə Piramidləri',emoji:'🏺',type:'tourist',desc:'Dünyanın 7 möcüzəsi. 4500 il tarix.',price:'200 EGP',rating:'⭐ 5.0',location:'Gizə',hours:'08:00–17:00',mapQ:'Pyramids of Giza Egypt',booking:''},
+        {name:'Böyük Sfenks',emoji:'🦁',type:'tourist',desc:'Misirin simvolu. Piramidlər yanında.',price:'Gizə bileti',rating:'⭐ 4.9',location:'Gizə',hours:'08:00–17:00',mapQ:'Great Sphinx of Giza',booking:''},
+        {name:'Karnak Məbədi',emoji:'🏯',type:'tourist',desc:'Dünyanın ən böyük qədim məbəd kompleksi.',price:'180 EGP',rating:'⭐ 4.9',location:'Lüksör',hours:'06:00–17:30',mapQ:'Karnak Temple Luxor Egypt',booking:''},
+        {name:'Misir Muzeyi',emoji:'🏛️',type:'tourist',desc:'Tutankamon xəzinəsi. 120.000+ artefakt.',price:'200 EGP',rating:'⭐ 4.8',location:'Tahrir Meydanı',hours:'09:00–17:00',mapQ:'Egyptian Museum Cairo',booking:''},
+        {name:'Nil Gəzintisi',emoji:'🛶',type:'tourist',desc:'Faluka ilə gün batımı gəzintisi.',price:'50 EGP',rating:'⭐ 4.7',location:'Kahirə Nil',hours:'16:00–22:00',mapQ:'Nile cruise Cairo',booking:''},
+        {name:'Xan əl-Xəlili',emoji:'🕌',type:'tourist',desc:'500 illik bazar. Ədviyyat, zərgərlik, suvenir.',price:'Pulsuz giriş',rating:'⭐ 4.6',location:'İslam Kahirəsi',hours:'09:00–22:00',mapQ:'Khan el-Khalili Cairo',booking:''},
+      ],
+      restaurant:[
+        {name:'Koshary El Tahrir',emoji:'🍲',type:'restaurant',desc:'Misirin milli yeməyi Koshary. Ən məşhur yer.',price:'30–50 EGP',rating:'⭐ 4.7',location:'Tahrir Meydanı',hours:'08:00–00:00',mapQ:'Koshary El Tahrir Cairo',booking:''},
+        {name:'Abou El Sid',emoji:'🥘',type:'restaurant',desc:'Ənənəvi Misir mətbəxi. Tarixli atmosfer.',price:'200–400 EGP',rating:'⭐ 4.8',location:'Zamalek',hours:'13:00–01:00',mapQ:'Abou El Sid Cairo',booking:''},
+        {name:'Felfela',emoji:'🧆',type:'restaurant',desc:'Klassik Misir yeməkləri. Turist sevimli.',price:'100–250 EGP',rating:'⭐ 4.5',location:'Mərkəz Kahirə',hours:'08:00–00:00',mapQ:'Felfela Restaurant Cairo',booking:''},
+      ],
+      shopping:[
+        {name:'Xan əl-Xəlili',emoji:'🛒',type:'shopping',desc:'500 illik bazar. Ədviyyat, zərgərlik.',price:'Müxtəlif',rating:'⭐ 4.6',location:'İslam Kahirəsi',hours:'09:00–22:00',mapQ:'Khan el-Khalili Cairo',booking:''},
+        {name:'City Stars Mall',emoji:'🛍️',type:'shopping',desc:'Kahirənin ən böyük müasir malı.',price:'Pulsuz giriş',rating:'⭐ 4.5',location:'Nasr Şəhəri',hours:'10:00–00:00',mapQ:'City Stars Mall Cairo',booking:''},
+      ],
+      hotel:[
+        {name:'Mena House Hotel',emoji:'🏨',type:'hotel',desc:'Piramidlərə baxan tarixi otel.',price:'300+ USD/gecə',rating:'⭐ 4.9',location:'Gizə',hours:'24 saat',mapQ:'Mena House Hotel Cairo',booking:'https://www.booking.com/hotel/eg/marriott-mena-house-cairo.html'},
+        {name:'Sofitel Cairo Nile',emoji:'🌊',type:'hotel',desc:'Nil kənarında lüks Fransız oteli.',price:'200+ USD/gecə',rating:'⭐ 4.8',location:'Nil kənarı',hours:'24 saat',mapQ:'Sofitel Cairo Nile El Gezirah',booking:'https://www.booking.com/hotel/eg/sofitel-cairo-nile-el-gezirah.html'},
+      ]
+    },
+    quickQ:['Misirdə 5 günlük tur planı yaz','Piramidlərə necə getmək?','Misir vizası lazımdırmı?','Ən yaxşı vaxt?']
+  },
+
+  luxor:{
+    flag:'🇪🇬',name:'LÜKSÖR',tagline:'FİRONLAR ŞƏHƏRİ • QƏDIM TEB',
+    color:'#FFD700',bg:'#1a0a00',
+    videos:[
+      {tag:'KARNAK',title:'Karnak Məbədi',desc:'Dünyanın ən böyük qədim məbəd kompleksi',emoji:'🏯',layers:['#1a1000','#2a1800','#FFD700'],dur:'14s'},
+      {tag:'VADİ',title:'Krallar Vadisi',desc:'Fironların məzarları • Tutankamon',emoji:'⚱️',layers:['#2a1500','#3a2000','#E8A020'],dur:'12s'},
+      {tag:'NİL ŞƏLALƏRI',title:'Nil üzərindəki xarabalıqlar',desc:'Ən gözəl çay gəzintisi dünyada',emoji:'🛶',layers:['#001a30','#002540','#40A0FF'],dur:'13s'},
+    ],
+    places:{
+      tourist:[
+        {name:'Karnak Məbədi',emoji:'🏯',type:'tourist',desc:'3000 il tarix. Əzəmətli sütunlar.',price:'180 EGP',rating:'⭐ 4.9',location:'Lüksör',hours:'06:00–17:30',mapQ:'Karnak Temple Luxor',booking:''},
+        {name:'Krallar Vadisi',emoji:'⚱️',type:'tourist',desc:'Tutankamon məzarı. Fironlar şəhəri.',price:'240 EGP',rating:'⭐ 4.8',location:'Qərbi Lüksör',hours:'06:00–17:00',mapQ:'Valley of Kings Luxor Egypt',booking:''},
+        {name:'Lüksör Məbədi',emoji:'🌙',type:'tourist',desc:'Gecə işıqlanması ilə unudulmaz.',price:'160 EGP',rating:'⭐ 4.8',location:'Lüksör mərkəz',hours:'06:00–22:00',mapQ:'Luxor Temple Egypt',booking:''},
+      ],
+      restaurant:[
+        {name:'El-Moudira',emoji:'🥗',type:'restaurant',desc:'Nil kənarında açıq hava restoranı.',price:'150–300 EGP',rating:'⭐ 4.7',location:'Lüksör Nil',hours:'12:00–23:00',mapQ:'El Moudira Restaurant Luxor',booking:''},
+      ],
+      shopping:[
+        {name:'Lüksör Bazarı',emoji:'🛒',type:'shopping',desc:'Papirus, heykəllər, Misir suvenirlər.',price:'Müxtəlif',rating:'⭐ 4.4',location:'Lüksör mərkəz',hours:'09:00–22:00',mapQ:'Luxor Bazaar Egypt',booking:''},
+      ],
+      hotel:[
+        {name:'Winter Palace Hotel',emoji:'🏰',type:'hotel',desc:'1886-dan bəri. Tarixi ingilis oteli.',price:'150+ USD/gecə',rating:'⭐ 4.8',location:'Nil kənarı',hours:'24 saat',mapQ:'Winter Palace Hotel Luxor',booking:'https://www.booking.com/hotel/eg/the-winter-palace-sofitel-winter-palace.html'},
+      ]
+    },
+    quickQ:['Lüksördə nə görməli?','Kairodan Lüksorə necə getmək?','Nə vaxt getmək lazım?']
+  },
+
+  istanbul:{
+    flag:'🇹🇷',name:'İSTANBUL',tagline:'WHERE EAST MEETS WEST',
+    color:'#E84040',bg:'#0d1420',
+    videos:[
+      {tag:'AYASOFYA',title:'Ayasofya',desc:'1500 illik tarix • Bizans + Osmanlı',emoji:'🕌',mp4:'4927',dur:'12s'},
+      {tag:'BOĞAZ',title:'Boğaz Turu',desc:'İki qitə arasında • Gəmi gəzintisi',emoji:'⛵',mp4:'39329',dur:'11s'},
+      {tag:'BAZAR',title:'Qrand Bazaar',desc:'4000+ mağaza • 500 il tarix',emoji:'🏪',mp4:'4928',dur:'10s'},
+      {tag:'TOPKAPI',title:'Topkapı Sarayı',desc:'Osmanlı imperatorları sarayı',emoji:'🏯',mp4:'4929',dur:'13s'},
+    ],
+    places:{tourist:[],restaurant:[],shopping:[],hotel:[]},
+    quickQ:['İstanbulda 3 günlük tur','Boğaz turu haqqında?','Viza lazımdırmı?','Ən yaxşı restoran?']
+  },
+  paris:{
+    flag:'🇫🇷',name:'PARIS',tagline:'THE CITY OF LIGHT',
+    color:'#4A90D9',bg:'#080d18',
+    videos:[
+      {tag:'EYFEL',title:'Eyfel Qülləsi',desc:'Fransanın simvolu • Gecə işıqlanması',emoji:'🗼',mp4:'4580',dur:'12s'},
+      {tag:'LUVR',title:'Luvr Muzeyi',desc:'Mona Liza • Dünya sənəti',emoji:'🏛️',mp4:'26875',dur:'11s'},
+      {tag:'CHAMPS',title:'Champs-Élysées',desc:'Dünyanın ən məşhur küçəsi',emoji:'🛍️',mp4:'4581',dur:'10s'},
+    ],
+    places:{tourist:[],restaurant:[],shopping:[],hotel:[]},
+    quickQ:['Paris 4 günlük tur planı','Eyfel bileyi neçədir?','Ən romantik yerlər?','Paris büdcəsi?']
+  },
+  baku:{
+    flag:'🇦🇿',name:'BAKI',tagline:'CITY OF WINDS & FIRE',
+    color:'#FF6B00',bg:'#080e18',
+    videos:[
+      {tag:'ALOV QÜLLƏLƏRİ',title:'Alov Qüllələri',desc:'Bakının simvolu • Gecə alov effekti',emoji:'🔥',mp4:'39451',dur:'11s'},
+      {tag:'ŞƏHƏRİN MƏRKƏZİ',title:'Bakı Şəhəri',desc:'Müasir memarlıq • Xəzər kənarında',emoji:'🏙️',mp4:'20116',dur:'12s'},
+      {tag:'BULVAR',title:'Sahil Bulvarı',desc:'Xəzər boyunca gəzinti • Gecə mənzərəsi',emoji:'🌊',mp4:'39441',dur:'10s'},
+    ],
+    places:{tourist:[],restaurant:[],shopping:[],hotel:[]},
+    quickQ:['Bakıda nə görməli?','Ən yaxşı plov restoranı?','Bakıdan hara getmək olar?','Bakı büdcəsi?']
+  },
+  tokyo:{flag:'🇯🇵',name:'TOKYO',tagline:'WHERE FUTURE BEGINS',color:'#FF4488',bg:'#0a0010',
+    videos:[{tag:'SHIBUYA',title:'Shibuya Crossing',desc:'2.5M insan/gün',emoji:'🚶',mp4:'2275',dur:'12s'},{tag:'SENSO-JI',title:'Senso-ji Məbədi',desc:'628-ci ildən',emoji:'⛩️',mp4:'2276',dur:'11s'}],
+    places:{tourist:[],restaurant:[],shopping:[],hotel:[]},quickQ:['Tokyo 5 günlük tur','Tokyo metro?','Ən dadlı yeməklər?','Tokyo büdcəsi?']},
+  bali:{flag:'🇮🇩',name:'BALI',tagline:'ISLAND OF THE GODS',color:'#2ECC71',bg:'#041408',
+    videos:[{tag:'ULUWATU',title:'Uluwatu Məbədi',desc:'Uçurumun kənarında Hindu məbədi',emoji:'🛕',mp4:'1671',dur:'12s'},{tag:'BEACH',title:'Bali Çimərlikləri',desc:'Tropik cənnət',emoji:'🏄',mp4:'1672',dur:'11s'}],
+    places:{tourist:[],restaurant:[],shopping:[],hotel:[]},quickQ:['Bali 7 günlük tur','Ubud mu Kuta mu?','Nə vaxt getmək?','Ucuz otel?']},
+  rome:{flag:'🇮🇹',name:'ROMA',tagline:'ETERNAL CITY',color:'#E8A020',bg:'#120800',
+    videos:[{tag:'KOLESEY',title:'Kolesey',desc:'2000 illik tarix',emoji:'🏟️',mp4:'3273',dur:'12s'},{tag:'VATİKAN',title:'Vatikan',desc:'Dünyanın ən kiçik dövləti',emoji:'⛪',mp4:'3274',dur:'11s'}],
+    places:{tourist:[],restaurant:[],shopping:[],hotel:[]},quickQ:['Roma 4 günlük tur','Vatikana bilet?','Ən yaxşı pasta?','Roma büdcəsi?']},
+  barcelona:{flag:'🇪🇸',name:'BARSELONA',tagline:'PASSION & ARCHITECTURE',color:'#FF3030',bg:'#120004',
+    videos:[{tag:'SAGRADA',title:'Sagrada Família',desc:'Gaudinin möcüzəsi',emoji:'⛪',mp4:'5020',dur:'12s'},{tag:'BEACH',title:'Barceloneta',desc:'Aralıq dənizi çimərliyi',emoji:'🏖️',mp4:'5021',dur:'11s'}],
+    places:{tourist:[],restaurant:[],shopping:[],hotel:[]},quickQ:['Barselona 4 günlük tur','Sagrada bilet?','Çimərlikler?','FC Barcelona oyunu?']},
+  newyork:{flag:'🇺🇸',name:'NEW YORK',tagline:'CITY THAT NEVER SLEEPS',color:'#40A0FF',bg:'#00060e',
+    videos:[{tag:'TIMES SQ',title:'Times Square',desc:'Heç yatmayan şəhər',emoji:'🌃',mp4:'3122',dur:'12s'},{tag:'CENTRAL PARK',title:'Central Park',desc:'840 hektar yaşıllıq',emoji:'🌳',mp4:'3123',dur:'11s'}],
+    places:{tourist:[],restaurant:[],shopping:[],hotel:[]},quickQ:['NYC 5 günlük tur','Ən yaxşı rayon?','Metro necə işləyir?','NYC büdcəsi?']},
+  maldives:{flag:'🇲🇻',name:'MALDİV',tagline:'PARADISE ON EARTH',color:'#20D4C0',bg:'#00080c',
+    videos:[{tag:'PARADISE',title:'Maldiv Atoll',desc:'Şəffaf mavi su',emoji:'🐠',mp4:'1866',dur:'13s'},{tag:'OVERWATER',title:'Su Villası',desc:'Okean üzərindəki cənnət',emoji:'🏖️',mp4:'1867',dur:'12s'}],
+    places:{tourist:[],restaurant:[],shopping:[],hotel:[]},quickQ:['Maldiv turu neçəyə?','Su villası?','Snorkeling harada?','Nə vaxt getmək?']},
+
+  // ===== YENİ ŞƏHƏRLƏr =====
+  singapore:{flag:'🇸🇬',name:'SİNQAPUR',tagline:'LION CITY • FUTURE • WONDER',color:'#E63946',bg:'#0a0510',
+    videos:[],places:{tourist:[],restaurant:[],shopping:[],hotel:[]},
+    quickQ:['Sinqapur turistik yerlər?','Marina Bay Sands?','Sinqapur turu neçəyə?','Nə vaxt getmək?']},
+
+  london:{flag:'🇬🇧',name:'LONDON',tagline:'ROYAL • ICONIC • TIMELESS',color:'#3A86FF',bg:'#050a14',
+    videos:[],places:{tourist:[],restaurant:[],shopping:[],hotel:[]},
+    quickQ:['London görməli yerlər?','Big Ben?','London muzeylər?','Visadan keçid?']},
+
+  amsterdam:{flag:'🇳🇱',name:'AMSTERDAM',tagline:'CANALS • ART • FREEDOM',color:'#FF6B35',bg:'#0a0800',
+    videos:[],places:{tourist:[],restaurant:[],shopping:[],hotel:[]},
+    quickQ:['Amsterdam kanalları?','Rijksmuseum?','Amsterdam turu?','Lalə bağçaları?']},
+
+  prague:{flag:'🇨🇿',name:'PRAQA',tagline:'FAIRY TALE CITY OF EUROPE',color:'#C77DFF',bg:'#08050f',
+    videos:[],places:{tourist:[],restaurant:[],shopping:[],hotel:[]},
+    quickQ:['Praqa qala?','Karl körpüsü?','Praqa gecə həyatı?','Turu neçəyə?']},
+
+  vienna:{flag:'🇦🇹',name:'VYANA',tagline:'MUSIC • IMPERIAL • CULTURE',color:'#FFD60A',bg:'#0a0800',
+    videos:[],places:{tourist:[],restaurant:[],shopping:[],hotel:[]},
+    quickQ:['Vyana opera?','Şönbrunn sarayı?','Vyana muzeyləri?','Turu planı?']},
+
+  budapest:{flag:'🇭🇺',name:'BUDAPEŞT',tagline:'PARIS OF THE EAST',color:'#FF4D6D',bg:'#0a0208',
+    videos:[],places:{tourist:[],restaurant:[],shopping:[],hotel:[]},
+    quickQ:['Budapeşt körpüləri?','Buda qalası?','Mərkəz hamamları?','Turu neçəyə?']},
+
+  santorini:{flag:'🇬🇷',name:'SANTORİNİ',tagline:'SUNSET • CALDERA • DREAMS',color:'#4CC9F0',bg:'#020810',
+    videos:[],places:{tourist:[],restaurant:[],shopping:[],hotel:[]},
+    quickQ:['Oia kəndi?','Santorini şərab?','Ən yaxşı otel?','Nə vaxt getmək?']},
+
+  antalya:{flag:'🇹🇷',name:'ANTALYA',tagline:'SUN • SEA • HISTORY',color:'#06D6A0',bg:'#00080a',
+    videos:[],places:{tourist:[],restaurant:[],shopping:[],hotel:[]},
+    quickQ:['Antalya plajlar?','Kemer? Side?','All inclusive otellər?','Turu neçəyə?']},
+
+  bangkok:{flag:'🇹🇭',name:'BANGKOK',tagline:'TEMPLES • STREET FOOD • ENERGY',color:'#FFB703',bg:'#0a0600',
+    videos:[],places:{tourist:[],restaurant:[],shopping:[],hotel:[]},
+    quickQ:['Bangkok tapınaqları?','Street food?','Chatuchak bazarı?','Turu planı?']},
+
+  madrid:{flag:'🇪🇸',name:'MADRİD',tagline:'PASSION • ART • FOOTBALL',color:'#E63946',bg:'#0a0202',
+    videos:[],places:{tourist:[],restaurant:[],shopping:[],hotel:[]},
+    quickQ:['Prado muzeyi?','Real Madrid?','Madrid gecə həyatı?','Turu neçəyə?']},
+
+  lisbon:{flag:'🇵🇹',name:'LİSSABON',tagline:'FADO • TRAM • ATLANTIC',color:'#FF9F1C',bg:'#0a0500',
+    videos:[],places:{tourist:[],restaurant:[],shopping:[],hotel:[]},
+    quickQ:['Lissabon tramvayı?','Sintra qalası?','Fado musiqisi?','Turu planı?']},
+
+  athens:{flag:'🇬🇷',name:'AFİNA',tagline:'CRADLE OF CIVILIZATION',color:'#4CC9F0',bg:'#020810',
+    videos:[],places:{tourist:[],restaurant:[],shopping:[],hotel:[]},
+    quickQ:['Akropol?','Parfenon?','Afina muzeyləri?','Yunan adaları?']},
+
+  florence:{flag:'🇮🇹',name:'FLORENSİYA',tagline:'RENAISSANCE • ART • BEAUTY',color:'#E9C46A',bg:'#0a0800',
+    videos:[],places:{tourist:[],restaurant:[],shopping:[],hotel:[]},
+    quickQ:['Uffizi qalereyası?','Florensiya katedrali?','Davud heykəli?','Turu neçəyə?']},
+
+  venice:{flag:'🇮🇹',name:'VENESİYA',tagline:'CANALS • GONDOLA • ROMANCE',color:'#4361EE',bg:'#020510',
+    videos:[],places:{tourist:[],restaurant:[],shopping:[],hotel:[]},
+    quickQ:['Qondola?','Müqəddəs Mark meydanı?','Rialto körpüsü?','Turu planı?']},
+
+  miami:{flag:'🇺🇸',name:'MİAMİ',tagline:'BEACH • ART DECO • NIGHTLIFE',color:'#FF6B6B',bg:'#0a0205',
+    videos:[],places:{tourist:[],restaurant:[],shopping:[],hotel:[]},
+    quickQ:['South Beach?','Art Deco?','Miami gecə klubları?','Turu neçəyə?']},
+
+  phuket:{flag:'🇹🇭',name:'PHUKET',tagline:'TROPICAL PARADISE',color:'#52B788',bg:'#010a05',
+    videos:[],places:{tourist:[],restaurant:[],shopping:[],hotel:[]},
+    quickQ:['Phuket plajlar?','Phi Phi adaları?','Pattaya vs Phuket?','Turu planı?']},
+
+  cancun:{flag:'🇲🇽',name:'KANKUN',tagline:'CARIBBEAN • MAYA • PARADISE',color:'#00B4D8',bg:'#000a10',
+    videos:[],places:{tourist:[],restaurant:[],shopping:[],hotel:[]},
+    quickQ:['Kankun plajlar?','Chichen Itza?','Tulum xarabaları?','Turu neçəyə?']},
+
+  sydney:{flag:'🇦🇺',name:'SİDNEY',tagline:'HARBOUR • OPERA • OUTBACK',color:'#FF9500',bg:'#0a0500',
+    videos:[],places:{tourist:[],restaurant:[],shopping:[],hotel:[]},
+    quickQ:['Opera House?','Bondi Beach?','Böyük Baryer Rifi?','Turu neçəyə?']},
+
+  toronto:{flag:'🇨🇦',name:'TORONTO',tagline:'MULTICULTURAL METROPOLIS',color:'#D62828',bg:'#0a0002',
+    videos:[],places:{tourist:[],restaurant:[],shopping:[],hotel:[]},
+    quickQ:['CN Tower?','Niagara şəlaləsi?','Toronto muzeyləri?','Turu planı?']},
+
+  hurghada:{flag:'🇪🇬',name:'HURGADA',tagline:'RED SEA • DIVING • SUN',color:'#00B4D8',bg:'#000a10',
+    videos:[],places:{tourist:[],restaurant:[],shopping:[],hotel:[]},
+    quickQ:['Hurgada plajlar?','Qırmızı dəniz diving?','Hurgada otellər?','Nə vaxt getmək?']},
+  // ===== YENİ ŞƏHİRLƏR =====
+  seoul:{flag:'🇰🇷',name:'SEUL',tagline:'K-POP, TECH & NEON LIGHTS',color:'#E91E8C',bg:'#0a0010',
+    quickQ:['Seoul-da nə görməli?','K-Pop konsert biletləri?','Seoul büdcəsi?','Korean BBQ harada?'],
+    videos:[{id:'gxkGGHWb2B4',title:'Seoul 4K'},{id:'ZY2FWIQ0CUQ',title:'Seoul Night'}],
+    places:{tourist:['Gyeongbokgung Sarayı','N Seoul Tower','Bukchon Hanok Village','DMZ turu'],restaurant:['Korean BBQ','Myeongdong küçə yeməyi','Bibimbap','Kore ramen'],shopping:['Myeongdong','Dongdaemun','Hongdae küçəsi'],hotel:['Lotte Hotel','Shilla Hotel','Ibis Seoul']}},
+
+  dubai2:{flag:'🇦🇪',name:'ABU DABİ',tagline:'FORMULA 1 & LÜKS ŞƏHƏR',color:'#006C35',bg:'#000a05',
+    quickQ:['Abu Dabi-da nə görməli?','Formula 1 biletləri?','Louvre Abu Dhabi?','Abu Dabi büdcəsi?'],
+    videos:[{id:'JYvCfHfYgD0',title:'Abu Dhabi 4K'}],
+    places:{tourist:['Sheikh Zayed Məscidi','Louvre Abu Dhabi','Ferrari World','Yas Marina'],restaurant:['Emirates Palace brunch','Qasr Al Watan','Corniche restoran'],shopping:['Yas Mall','World Trade Center','Marina Mall'],hotel:['Emirates Palace','St Regis Saadiyat','Yas Viceroy']}},
+
+  capetown:{flag:'🇿🇦',name:'KAPE TAUNY',tagline:'TABLE MOUNTAIN & SAFARİ',color:'#2E7D32',bg:'#000a02',
+    quickQ:['Cape Town-da nə görməli?','Table Mountain turu?','Safari haraya getməli?','Cape Town büdcəsi?'],
+    videos:[{id:'M4GCVHGPDhE',title:'Cape Town 4K'}],
+    places:{tourist:['Table Mountain','Robben Island','Cape of Good Hope','Boulders Beach penqvinlər'],restaurant:['V&A Waterfront','Bo-Kaap yeməyi','Braai (BBQ)'],shopping:['V&A Waterfront Mall','Long Street'],hotel:['One&Only','The Silo Hotel','Protea Hotel']}},
+
+  marrakech:{flag:'🇲🇦',name:'MƏRRAKEŞ',tagline:'RƏNGARƏNG BAZAR & SARAY',color:'#C62828',bg:'#0a0000',
+    quickQ:['Mərrakeş-də nə görməli?','Medina turu?','Tagine harada yemək?','Mərrakeş büdcəsi?'],
+    videos:[{id:'1L6QCO3aYhM',title:'Marrakech 4K'}],
+    places:{tourist:['Jemaa el-Fna meydanı','Bahia Sarayı','Majorelle Bağçası','Medina bazarı'],restaurant:['Tagine restoranlar','Jemaa el-Fna küçə yeməyi','Riad naharı'],shopping:['Medina souq','Bahia Bazar'],hotel:['Royal Mansour','La Mamounia','Riad Fes']}},
+
+  reykjavik:{flag:'🇮🇸',name:'REYKYAVİK',tagline:'AURORA BOREALİS & FÖRDLƏR',color:'#1565C0',bg:'#000510',
+    quickQ:['Aurora borealis nə vaxt görünür?','Reykjavik-dən nə görməli?','Iceland büdcəsi?','Buzlaq turu?'],
+    videos:[{id:'EsRjnj3BKSY',title:'Iceland 4K'}],
+    places:{tourist:['Northern Lights turu','Blue Lagoon','Gullfoss şəlaləsi','Þingvellir milli parkı'],restaurant:['Reykjavik Fish & Chips','Lamb soup','Skyr'],shopping:['Laugavegur küçəsi'],hotel:['Reykjavik Konsulat','Hotel Borg','CenterHotel']}},
+
+  zurich:{flag:'🇨🇭',name:'SÜRİX',tagline:'İSVEÇRƏ DƏQIQLIYI & ALPLER',color:'#C62828',bg:'#0a0000',
+    quickQ:['Sürix-dən nə görməli?','Alplərə tur?','İsveçrə şokoladı harada?','Sürix büdcəsi?'],
+    videos:[{id:'4BKsI7BDPUE',title:'Zurich 4K'}],
+    places:{tourist:['Grossmünster kilsəsi','Zürichsee gölü','Langstrasse küçəsi','Kunsthaus muzeyi'],restaurant:['Fondue','Raclette','Züri Gschnätzlets'],shopping:['Bahnhofstrasse'],hotel:['Park Hyatt Zurich','Baur au Lac','The Dolder Grand']}},
+
+  lisbon2:{flag:'🇵🇹',name:'PORTO',tagline:'PORT ŞƏRABI & ƏZƏMƏTLI KÖRPÜ',color:'#E65100',bg:'#0a0200',
+    quickQ:['Porto-da nə görməli?','Port şərabı tastingi?','Porto büdcəsi?','Douro vadisi turu?'],
+    videos:[{id:'iGiAkFBpgO4',title:'Porto 4K'}],
+    places:{tourist:['Ribeira sahili','Dom Luís körpüsü','Livraria Lello','Douro vadisi'],restaurant:['Francesinha','Bacalhau (pollock)','Port şərabı'],shopping:['Rua de Santa Catarina'],hotel:['The Yeatman','Belmonte','Infante Sagres']}},
+
+  naples:{flag:'🇮🇹',name:'NEAPOL',tagline:'ORİJİNAL PİZZA & POMPEYA',color:'#1565C0',bg:'#000510',
+    quickQ:['Neapol-da nə görməli?','Pompeya turu?','Ən yaxşı pizza?','Neapol büdcəsi?'],
+    videos:[{id:'pKGkDYsMU_Q',title:'Naples 4K'}],
+    places:{tourist:['Pompeya','Capri adası','Castel dell Ovo','Spaccanapoli küçəsi'],restaurant:['Pizza Margherita (Antica Pizzeria da Michele)','Sfogliatella','Espresso'],shopping:['Via Toledo'],hotel:['Grand Hotel Vesuvio','Romeo Hotel','Castel dell Ovo Hotel']}},
+
+  oslo:{flag:'🇳🇴',name:'OSLO',tagline:'VİKİNQ TARİXİ & FYORDİ',color:'#1A237E',bg:'#000008',
+    quickQ:['Oslo-da nə görməli?','Viking Museum?','Norveç fiordları?','Oslo büdcəsi?'],
+    videos:[{id:'jAQl3U3DPGQ',title:'Oslo 4K'}],
+    places:{tourist:['Viking Ship Museum','Oslo Opera House','Vigeland Park','Holmenkollen'],restaurant:['Salmon','Brown cheese','Fårikål'],shopping:['Karl Johans Gate'],hotel:['The Thief','Grand Hotel Oslo','Continental']}},
+
+  copenhagen:{flag:'🇩🇰',name:'KOPENHAGEN',tagline:'DƏNİZ QIZI & AMUSEMENT PARK',color:'#C62828',bg:'#0a0000',
+    quickQ:['Kopenhagen-da nə görməli?','Tivoli Gardens?','Little Mermaid?','Kopenhagen büdcəsi?'],
+    videos:[{id:'LM_XYH5iyp4',title:'Copenhagen 4K'}],
+    places:{tourist:['Little Mermaid heykəli','Tivoli Gardens','Nyhavn','Christianborg Sarayı'],restaurant:['Smorrebrod','New Nordic cuisine','Hotdog'],shopping:['Strøget küçəsi'],hotel:['Hotel dAngleterre','Nimb Hotel','SP34']}},
+
+  stockholm:{flag:'🇸🇪',name:'STOKHOLM',tagline:'VASA GƏMİSİ & GAMLA STAN',color:'#1565C0',bg:'#000510',
+    quickQ:['Stokholm-da nə görməli?','Gamla Stan turu?','ABBA Museum?','Stokholm büdcəsi?'],
+    videos:[{id:'4LWGcgg8te0',title:'Stockholm 4K'}],
+    places:{tourist:['Gamla Stan (köhnə şəhər)','Vasa Museum','ABBA Museum','Skansen'],restaurant:['Meatballs','Gravlax','Kanelbulle'],shopping:['Drottninggatan'],hotel:['Grand Hôtel','At Six','Nobis Hotel']}},
+
+  helsinki:{flag:'🇫🇮',name:'HELSİNKİ',tagline:'SAUNA MƏDƏNIYYƏTI & DİZAYN',color:'#1565C0',bg:'#000510',
+    quickQ:['Helsinki-də nə görməli?','Sauna turu?','Suomenlinna qalası?','Helsinki büdcəsi?'],
+    videos:[{id:'XCFh9iZ6hFg',title:'Helsinki 4K'}],
+    places:{tourist:['Suomenlinna qalası','Helsinki Katedrali','Temppeliaukio kilsəsi','Market Square'],restaurant:['Karjalanpiirakka','Salmon soup','Salmiakki'],shopping:['Esplanade Park'],hotel:['Klaus K','Hotel Kamp','Scandic Grand Central']}},
+
+  warsaw:{flag:'🇵🇱',name:'VARŞAVA',tagline:'DIRÇƏLIŞ & TARIXI MƏRKƏZ',color:'#C62828',bg:'#0a0000',
+    quickQ:['Varşava-da nə görməli?','Chopin muzeyi?','Varşava büdcəsi?','Köhnə şəhər turu?'],
+    videos:[{id:'LyjHOGiX3gQ',title:'Warsaw 4K'}],
+    places:{tourist:['Köhnə şəhər meydanı','Chopin Muzeyi','Lazienki parkı','Warsaw Rising Museum'],restaurant:['Pierogi','Bigos','Żurek'],shopping:['Nowy Świat küçəsi'],hotel:['Hotel Bristol','Raffles Europejski','Novotel Centrum']}},
+
+  krakow:{flag:'🇵🇱',name:'KRAKOW',tagline:'WAWEL QALASI & ORTA ƏSR',color:'#1A237E',bg:'#000008',
+    quickQ:['Krakow-da nə görməli?','Auschwitz turu?','Wawel qalası?','Krakow büdcəsi?'],
+    videos:[{id:'pZ1nDGYoC_M',title:'Krakow 4K'}],
+    places:{tourist:['Wawel qalası','Rynek Główny meydanı','Kazimierz məhəlləsi','Auschwitz-Birkenau'],restaurant:['Pierogi','Oscypek','Bigos'],shopping:['Sukiennice (Cloth Hall)'],hotel:['Hotel Stary','Sheraton Grand','Pod Różą']}},
+
+  dubrovnik:{flag:'🇭🇷',name:'DUBROVNIK',tagline:'TAXT OYUNLARI ŞƏHƏRİ',color:'#F57F17',bg:'#0a0400',
+    quickQ:['Dubrovnik-da nə görməli?','Şəhər divarları turu?','Game of Thrones lokasiyas?','Dubrovnik büdcəsi?'],
+    videos:[{id:'Jm_o5j9dNfE',title:'Dubrovnik 4K'}],
+    places:{tourist:['Şəhər divarları','Stradun küçəsi','Fort Lovrijenac','Lokrum adası'],restaurant:['Adriatik balıq','Peka (lamb)','Prstaci'],shopping:['Stradun'],hotel:['Hotel Excelsior','Villa Orsula','Hilton Imperial']}},
+
+  tbilisi:{flag:'🇬🇪',name:'TBİLİSİ',tagline:'GÜRCÜ ŞƏRABI & QAFQAZ',color:'#B71C1C',bg:'#0a0000',
+    quickQ:['Tbilisi-də nə görməli?','Gürcü şərabı dequstasiyası?','Tbilisi büdcəsi?','Kazbegi turu?'],
+    videos:[{id:'pq1Pq4xn3EM',title:'Tbilisi 4K'}],
+    places:{tourist:['Narikala qalası','Mtkvari sahili','Abanotubani (hamam məhəlləsi)','Mtskheta'],restaurant:['Khinkali','Khachapuri','Churchkhela','Gürcü şərabı'],shopping:['Rustaveli prospekti'],hotel:['Rooms Hotel','Stamba Hotel','Hotel Betsy']}},
+
+  yerevan:{flag:'🇦🇲',name:'İRƏVAN',tagline:'ARARAT DAĞLARI & ERMƏNİ TARİXİ',color:'#E53935',bg:'#0a0000',
+    quickQ:['İrəvan-da nə görməli?','Ararat dağı?','Ermənistan büdcəsi?','Garni məbədi?'],
+    videos:[{id:'1XGJSGfkbSk',title:'Yerevan 4K'}],
+    places:{tourist:['Kaskad','Respublika meydanı','Genocide Memorial','Garni Məbədi'],restaurant:['Dolma','Khorovats (BBQ)','Lavash','Erməni konyakı'],shopping:['Vernissage bazarı'],hotel:['Marriott Armenia','The Alexander','Tufenkian Historic']}},
+
+  tashkent:{flag:'🇺🇿',name:'DAŞKƏND',tagline:'İPƏK YOLU & MÜASIR ÖZBƏKISTAN',color:'#1565C0',bg:'#000510',
+    quickQ:['Daşkənd-da nə görməli?','Səmərqənd turu?','Özbək plovü?','Daşkənd büdcəsi?'],
+    videos:[{id:'Q7tSHEYl2KU',title:'Tashkent 4K'}],
+    places:{tourist:['Xast İmom külliyyəsi','Çorsu bazarı','Amir Timur muzeyi','Navoiy teatrı'],restaurant:['Plov (aşplov)','Somsa','Lagman','Şurpa'],shopping:['Çorsu bazarı'],hotel:['Hyatt Regency Tashkent','Lotte City Hotel','Ramada']}},
+
+  samarkand:{flag:'🇺🇿',name:'SƏMƏRQƏND',tagline:'TİMURİLƏR VƏ İPƏK YOLU',color:'#6A1B9A',bg:'#0a0015',
+    quickQ:['Səmərqənd-da nə görməli?','Registan meydanı?','Səmərqənd büdcəsi?','Şahizinda?'],
+    videos:[{id:'wjcfZT7VIL0',title:'Samarkand 4K'}],
+    places:{tourist:['Registan meydanı','Gur-e-Amir mausoleyumu','Bibi-Xanım məscidi','Şahizinda'],restaurant:['Plov','Somsa','Non (çörək)'],shopping:['Siab bazarı'],hotel:['Registan Plaza','Samarkand Armada','Malika Prime']}},
+
+  kyoto:{flag:'🇯🇵',name:'KİOTO',tagline:'ŞİNTO MƏBƏDLƏRİ & SAKURAlar',color:'#AD1457',bg:'#0a0005',
+    quickQ:['Kioto-da nə görməli?','Fushimi Inari?','Geisha görəcəyim yer?','Kioto büdcəsi?'],
+    videos:[{id:'QJTM3sJpEk4',title:'Kyoto 4K'}],
+    places:{tourist:['Fushimi Inari Taisha','Kinkakuji (Qızıl Pavyon)','Arashiyama bambuk meşəsi','Gion məhəlləsi'],restaurant:['Kaiseki','Matcha','Tofu','Yudofu'],shopping:['Nishiki bazarı'],hotel:['The Ritz-Carlton Kyoto','Aman Kyoto','Hyatt Regency']}},
+
+  osaka:{flag:'🇯🇵',name:'OSAKA',tagline:'RAMEN, TAKOYAKI & GECE HƏYATI',color:'#F57F17',bg:'#0a0400',
+    quickQ:['Osaka-da nə görməli?','Dotonbori?','Universal Studios?','Osaka büdcəsi?'],
+    videos:[{id:'3x9e6XMVHEU',title:'Osaka 4K'}],
+    places:{tourist:['Osaka Qalası','Dotonbori','Universal Studios Japan','Namba'],restaurant:['Takoyaki','Okonomiyaki','Ramen','Kushikatsu'],shopping:['Shinsaibashi','Amerikamura'],hotel:['Conrad Osaka','InterContinental','The St. Regis']}},
+
+  hanoi:{flag:'🇻🇳',name:'HANOY',tagline:'PHO & KÖHNƏ ÇEYREK',color:'#C62828',bg:'#0a0000',
+    quickQ:['Hanoy-da nə görməli?','Ha Long Bay turu?','Pho harada yemək?','Hanoy büdcəsi?'],
+    videos:[{id:'V5ynOr-VGwM',title:'Hanoi 4K'}],
+    places:{tourist:['Köhnə Çeyrek','Ho Chi Minh Mausoleyumu','Hoan Kiem gölü','Ha Long Bay turu'],restaurant:['Pho Bo','Bun Cha','Banh Mi','Bia Hơi (yerli pivə)'],shopping:['Dong Xuan bazarı'],hotel:['Sofitel Legend Metropole','Capella Hanoi','La Siesta Premium']}},
+
+  hochiminh:{flag:'🇻🇳',name:'HO ŞI MİN',tagline:'SAYGON ENERJİSİ & MÜHARIBƏ TARİXİ',color:'#C62828',bg:'#0a0000',
+    quickQ:['Ho Şi Min-da nə görməli?','Cu Chi tunelləri?','War Remnants Museum?','Büdcə?'],
+    videos:[{id:'GpQBhBfJSX0',title:'Ho Chi Minh 4K'}],
+    places:{tourist:['Cu Chi tunelləri','War Remnants Museum','Reunification Palace','Ben Thanh bazarı'],restaurant:['Banh Mi','Bun Bo Hue','Com tam','Bia Hơi'],shopping:['Ben Thanh','Saigon Square'],hotel:['Park Hyatt Saigon','Caravelle','InterContinental']}},
+
+  kathmandu:{flag:'🇳🇵',name:'KATMANDU',tagline:'EVEREST VƏ BUDDA MƏBƏDLƏRİ',color:'#E53935',bg:'#0a0000',
+    quickQ:['Katmandu-da nə görməli?','Everest trekkinq?','Pashupatinath?','Büdcə?'],
+    videos:[{id:'YdZCRfpBPFQ',title:'Kathmandu 4K'}],
+    places:{tourist:['Swayambhunath (Monkey Temple)','Boudhanath stupa','Pashupatinath','Bhaktapur Durbar meydanı'],restaurant:['Dal Bhat','Momo (pelmeni)','Thukpa (şorba)'],shopping:['Thamel bazarı'],hotel:['Dwarikas Hotel','Hyatt Regency','Hotel Yak & Yeti']}},
+
+  muscat:{flag:'🇴🇲',name:'MUSKAT',tagline:'OMAN LÜKSÜ & ÇÖL',color:'#1B5E20',bg:'#000a02',
+    quickQ:['Muskat-da nə görməli?','Sultan Qaboos məscidi?','Oman büdcəsi?','Wahiba Sands?'],
+    videos:[{id:'J8VmPaL2FMY',title:'Muscat 4K'}],
+    places:{tourist:['Sultan Qaboos Böyük Məscidi','Mutrah Corniche','Nizwa qalası','Wahiba Sands'],restaurant:['Machboos','Harees','Shuwa','Halwa'],shopping:['Mutrah souq'],hotel:['The Chedi Muscat','Al Bustan Palace','W Muscat']}},
+
+  doha:{flag:'🇶🇦',name:'DOHA',tagline:'QATAR 2022 VƏ LÜKS',color:'#7B1FA2',bg:'#0a0010',
+    quickQ:['Doha-da nə görməli?','Museum of Islamic Art?','Doha büdcəsi?','Pearl Qatar?'],
+    videos:[{id:'SiZ-e-TGiOY',title:'Doha 4K'}],
+    places:{tourist:['Museum of Islamic Art','Souq Waqif','Pearl Qatar','Katara Cultural Village'],restaurant:['Machboos','Saloona','Harees'],shopping:['Villaggio Mall','Souq Waqif'],hotel:['Raffles Doha','Mandarin Oriental','W Doha']}},
+
+  tbilisi2:{flag:'🇬🇪',name:'BATUMİ',tagline:'QARADƏNİZ PLAJI & KAZİNO',color:'#006064',bg:'#000a0b',
+    quickQ:['Batumi-da nə görməli?','Batumi plajları?','Kazino?','Batumi büdcəsi?'],
+    videos:[{id:'cH8b5MzxzMk',title:'Batumi 4K'}],
+    places:{tourist:['Ali & Nino heykəli','Batumi Boulevard','Alfaburç','Çavçavadze prospekti'],restaurant:['Adjarian Khachapuri','Mtsvadi','Pkhali'],shopping:['Batumi Mall'],hotel:['Sheraton Batumi','Radisson Blu','Hilton Batumi']}},
+
+  losangeles:{flag:'🇺🇸',name:'LOS-ANCELES',tagline:'HOLLYWOOD & SÖRFÇÜLÜK',color:'#F57F17',bg:'#0a0400',
+    quickQ:['LA-da nə görməli?','Hollywood turu?','Beverly Hills?','LA büdcəsi?'],
+    videos:[{id:'SVlROmQkKe0',title:'Los Angeles 4K'}],
+    places:{tourist:['Hollywood Boulevard','Griffith Observatory','Santa Monica Pier','Getty Center'],restaurant:['InNOut Burger','Kogi BBQ','Pinks Hot Dogs','Nobu Malibu'],shopping:['Rodeo Drive','Melrose Ave'],hotel:['Chateau Marmont','The Beverly Hills Hotel','SLS']}},
+
+  chicago:{flag:'🇺🇸',name:'ÇİKAQO',tagline:'GÖYƏLTIRƏNLƏR & BLUES',color:'#1565C0',bg:'#000510',
+    quickQ:['Çikaqo-da nə görməli?','Chicago-style pizza?','Architecture boat tour?','Büdcə?'],
+    videos:[{id:'AhLdMiR6R60',title:'Chicago 4K'}],
+    places:{tourist:['Millennium Park','The Bean','Art Institute','Navy Pier'],restaurant:['Deep dish pizza','Chicago-style hot dog','Garrett popcorn'],shopping:['Magnificent Mile'],hotel:['The Peninsula','Loews Chicago','Kimpton Gray']}},
+
+  lasvegas:{flag:'🇺🇸',name:'LAS-VEQAS',tagline:'KAZİNO, ŞOU & ÇÖL',color:'#F50057',bg:'#0a000a',
+    quickQ:['Las Vegas-da nə görməli?','Hansı kazino?','Las Vegas büdcəsi?','Cirque du Soleil?'],
+    videos:[{id:'3SKNEwTGBNY',title:'Las Vegas 4K'}],
+    places:{tourist:['The Strip','Fremont Street','Grand Canyon turu','Bellagio fontanı'],restaurant:['Buffetlər','Gordon Ramsay Steak','Joël Robuchon'],shopping:['Forum Shops','The Cosmopolitan'],hotel:['Bellagio','Wynn','MGM Grand']}},
+
+  buenosaires:{flag:'🇦🇷',name:'BUENOS-AİRES',tagline:'TANGO, STEAK & AVROPA MEMAR',color:'#1565C0',bg:'#000510',
+    quickQ:['Buenos Aires-da nə görməli?','Tango show?','Asado (steak)?','Büdcə?'],
+    videos:[{id:'RkBlLRNqUsg',title:'Buenos Aires 4K'}],
+    places:{tourist:['La Boca','Recoleta Cemetery','Plaza de Mayo','Palermo məhəlləsi'],restaurant:['Asado (BBQ)','Empanadas','Dulce de leche','Medialunas'],shopping:['Palermo Soho'],hotel:['Four Seasons','Alvear Palace','Faena Hotel']}},
+
+  riodejaneiro:{flag:'🇧🇷',name:'RİO DE JANEYRObu',tagline:'KARNAVAl, PLAJ & CRISTO',color:'#1B5E20',bg:'#000a02',
+    quickQ:['Rio-da nə görməli?','Cristo Redentor?','Copacabana?','Rio büdcəsi?'],
+    videos:[{id:'m3LJvskpBjA',title:'Rio 4K'}],
+    places:{tourist:['Cristo Redentor','Copacabana plajı','Sugarloaf Dağı','Ipanema'],restaurant:['Churrasco','Feijoada','Coxinha','Açaí'],shopping:['Shopping Leblon'],hotel:['Copacabana Palace','Hotel Santa Teresa','Fasano']}},
+
+  shanghai:{flag:'🇨🇳',name:'ŞANXAY',tagline:'MEGAPOLIS & PUDONG SİLUETİ',color:'#C62828',bg:'#0a0000',
+    quickQ:['Şanxay-da nə görməli?','The Bund?','Yu Garden?','Şanxay büdcəsi?'],
+    videos:[{id:'vfMnpnJI7hs',title:'Shanghai 4K'}],
+    places:{tourist:['The Bund','Yu Garden','Shanghai Tower','French Concession'],restaurant:['Xiaolongbao (dump.)','Peking duck','Hairy crab','Din Tai Fung'],shopping:['Nanjing Road','Xintiandi'],hotel:['Peninsula Shanghai','Waldorf Astoria','The Middle House']}},
+
+  beijing:{flag:'🇨🇳',name:'PEKİN',tagline:'ÇİN SƏDDİ & YASAQ ŞƏHƏR',color:'#C62828',bg:'#0a0000',
+    quickQ:['Pekin-da nə görməli?','Çin Səddi turu?','Yasaq Şəhər?','Pekin büdcəsi?'],
+    videos:[{id:'bFtUQfN3Pss',title:'Beijing 4K'}],
+    places:{tourist:['Çin Səddi','Yasaq Şəhər','Tiananmen meydanı','Yaz Sarayı'],restaurant:['Pekin ördəyi','Kung Pao toyuq','Jianbing','Hot pot'],shopping:['Wangfujing küçəsi','Silk Market'],hotel:['The Peninsula Beijing','Aman at Summer Palace','Park Hyatt']}},
+
+  kualalumpur:{flag:'🇲🇾',name:'KUALA-LUMPUR',tagline:'PETRONAS VƏ MULTİKULTURAL',color:'#1565C0',bg:'#000510',
+    quickQ:['KL-da nə görməli?','Petronas Towers?','Batu Caves?','KL büdcəsi?'],
+    videos:[{id:'L7zf5YD9zJc',title:'Kuala Lumpur 4K'}],
+    places:{tourist:['Petronas Twin Towers','Batu Caves','KL Tower','Merdeka Square'],restaurant:['Nasi Lemak','Roti Canai','Char Kway Teow','Cendol'],shopping:['Bukit Bintang','Pavilion Mall'],hotel:['Mandarin Oriental','The Ritz-Carlton','Grand Hyatt']}},
+
+  manila:{flag:'🇵🇭',name:'MANİLA',tagline:'FİLİPPİN ADASI CƏNNƏTİ',color:'#1565C0',bg:'#000510',
+    quickQ:['Manila-da nə görməli?','Palawan adası?','Filipino mətbəxi?','Manila büdcəsi?'],
+    videos:[{id:'jOnGx7xFjbQ',title:'Manila 4K'}],
+    places:{tourist:['Intramuros','Rizal Park','BGC (Bonifacio Global City)','Palawan adası turu'],restaurant:['Adobo','Sinigang','Lechon','Halo-halo'],shopping:['SM Mall of Asia'],hotel:['Shangri-La','Manila Hotel','Conrad Manila']}},
+
+  colombo:{flag:'🇱🇰',name:'KOLOMBO',tagline:'SRİ LANKA ÇAY VƏ TAPINAQLAR',color:'#FF6F00',bg:'#0a0300',
+    quickQ:['Kolombo-da nə görməli?','Kandy turu?','Sri Lanka çayı?','Büdcə?'],
+    videos:[{id:'WYqXA91kh6A',title:'Colombo 4K'}],
+    places:{tourist:['Gangaramaya Məbədi','Colombo Milli Muzeyi','Galle Face Green','Lotus Tower'],restaurant:['Rice and Curry','Kottu Roti','Hoppers','Crab curry'],shopping:['Odel','Majestic City'],hotel:['Cinnamon Grand','The Kingsbury','Shangri-La Colombo']}},
+
+  nairobi:{flag:'🇰🇪',name:'NAİROBİ',tagline:'SAFARİ & AFRİKA MƏDƏNIYYƏTI',color:'#1B5E20',bg:'#000a02',
+    quickQ:['Nairobi-da nə görməli?','Masai Mara safari?','Nairobi büdcəsi?','Giraffe Centre?'],
+    videos:[{id:'0jY6mFN7B3k',title:'Nairobi 4K'}],
+    places:{tourist:['Nairobi Milli Parkı','Giraffe Centre','David Sheldrick Elephant Orphanage','Karen Blixen Museum'],restaurant:['Nyama Choma','Ugali','Sukuma Wiki','Kenyan tea'],shopping:['Village Market','Westgate'],hotel:['Hemingways Nairobi','The Tribe Hotel','Fairmont The Norfolk']}},
+
+  casablanca:{flag:'🇲🇦',name:'KASABLANKA',tagline:'HƏSƏN II MƏSCİDİ & FİLM',color:'#1565C0',bg:'#000510',
+    quickQ:['Kasablanka-da nə görməli?','Hassan II məscidi?','Ricks Cafe?','Büdcə?'],
+    videos:[{id:'pMX_0EHRpbQ',title:'Casablanca 4K'}],
+    places:{tourist:['Hassan II Məscidi','Corniche sahili','Old Medina','Mohammed V meydanı'],restaurant:['Tagine','Couscous','Harira shorbası','Pastilla'],shopping:['Maarif District'],hotel:['Sofitel Casablanca','Hyatt Regency','Four Seasons']}},
+
+  belgrade:{flag:'🇷🇸',name:'BELQRADbu',tagline:'GECƏ HƏYATI & TUNA ÇAYI',color:'#C62828',bg:'#0a0000',
+    quickQ:['Belqrad-da nə görməli?','Kalemegdan?','Belqrad gecə həyatı?','Büdcə?'],
+    videos:[{id:'0WLPM3I9mbc',title:'Belgrade 4K'}],
+    places:{tourist:['Kalemegdan Qalası','Skadarlija Bohem Küçəsi','St. Sava Kilsəsi','Zemun'],restaurant:['Ćevapi','Pljeskavica','Sarma','Rakija'],shopping:['Knez Mihailova küçəsi'],hotel:['Square Nine','Hyatt Regency','Hotel Moskva']}},
+
+  split:{flag:'🇭🇷',name:'SPLİT',tagline:'DİOKLETİAN SARAYI & ADRİATİK',color:'#0277BD',bg:'#00050a',
+    quickQ:['Split-da nə görməli?','Diocletian Sarayı?','Adriatik adaları?','Split büdcəsi?'],
+    videos:[{id:'mRvdV9bFgU8',title:'Split 4K'}],
+    places:{tourist:['Diocletian Sarayı','Klis qalası','Hvar adası','Brač adası'],restaurant:['Peka (lamb & veg)','Prstaci','Dalmatian prosciutto'],shopping:['Split Green Market'],hotel:['Hotel Vestibul Palace','Radisson Blu Resort','Park Hotel Split']}},
+
+  dubai3:{flag:'🇦🇪',name:'ŞARM ƏŞ-ŞEYX',tagline:'QİZİL PLAJLAR & MƏRCAN RIFLƏR',color:'#0277BD',bg:'#00050a',
+    quickQ:['Şarm-da nə görməli?','Dalğıcılıq?','Naama Bay?','Büdcə?'],
+    videos:[{id:'pz4a7UtT9ek',title:'Sharm El Sheikh 4K'}],
+    places:{tourist:['Ras Mohammed Milli Parkı','Naama Bay','Tiran adası','Old Market'],restaurant:['Seafood restoranlar','El Masrien','Hard Rock Cafe'],shopping:['Old Market'],hotel:['Four Seasons Sharm','Rixos Sharm','Ritz-Carlton']}},
+
+  losangeles2:{flag:'🇺🇸',name:'SAN-FRANSİSKO',tagline:'QİZİL QAPI KÖRPÜSÜ & SİLİKON',color:'#F57F17',bg:'#0a0400',
+    quickQ:['San Fransisko-da nə görməli?','Golden Gate?','Alcatraz?','SF büdcəsi?'],
+    videos:[{id:'ZfAqHBJa9DM',title:'San Francisco 4K'}],
+    places:{tourist:['Golden Gate Bridge','Alcatraz adası','Fishermans Wharf','Chinatown'],restaurant:['Sourdough bread','Dungeness crab','Mission burrito','Ghirardelli şokoladı'],shopping:['Union Square'],hotel:['The Fairmont','Palace Hotel','Kimpton Sir Francis Drake']}},
+
+  // ===== YENİ ŞƏHİRLƏR =====
+  seoul:{flag:'🇰🇷',name:'SEUL',tagline:'K-POP, TECH & NEON LIGHTS',color:'#E91E8C',bg:'#0a0010',
+    quickQ:['Seoul-da nə görməli?','K-Pop konsert biletləri?','Seoul büdcəsi?','Korean BBQ harada?'],
+    videos:[{id:'gxkGGHWb2B4',title:'Seoul 4K'},{id:'ZY2FWIQ0CUQ',title:'Seoul Night'}],
+    places:{tourist:['Gyeongbokgung Sarayı','N Seoul Tower','Bukchon Hanok Village','DMZ turu'],restaurant:['Korean BBQ','Myeongdong küçə yeməyi','Bibimbap','Kore ramen'],shopping:['Myeongdong','Dongdaemun','Hongdae küçəsi'],hotel:['Lotte Hotel','Shilla Hotel','Ibis Seoul']}},
+
+  dubai2:{flag:'🇦🇪',name:'ABU DABİ',tagline:'FORMULA 1 & LÜKS ŞƏHƏR',color:'#006C35',bg:'#000a05',
+    quickQ:['Abu Dabi-da nə görməli?','Formula 1 biletləri?','Louvre Abu Dhabi?','Abu Dabi büdcəsi?'],
+    videos:[{id:'JYvCfHfYgD0',title:'Abu Dhabi 4K'}],
+    places:{tourist:['Sheikh Zayed Məscidi','Louvre Abu Dhabi','Ferrari World','Yas Marina'],restaurant:['Emirates Palace brunch','Qasr Al Watan','Corniche restoran'],shopping:['Yas Mall','World Trade Center','Marina Mall'],hotel:['Emirates Palace','St Regis Saadiyat','Yas Viceroy']}},
+
+  capetown:{flag:'🇿🇦',name:'KAPE TAUNY',tagline:'TABLE MOUNTAIN & SAFARİ',color:'#2E7D32',bg:'#000a02',
+    quickQ:['Cape Town-da nə görməli?','Table Mountain turu?','Safari haraya getməli?','Cape Town büdcəsi?'],
+    videos:[{id:'M4GCVHGPDhE',title:'Cape Town 4K'}],
+    places:{tourist:['Table Mountain','Robben Island','Cape of Good Hope','Boulders Beach penqvinlər'],restaurant:['V&A Waterfront','Bo-Kaap yeməyi','Braai (BBQ)'],shopping:['V&A Waterfront Mall','Long Street'],hotel:['One&Only','The Silo Hotel','Protea Hotel']}},
+
+  marrakech:{flag:'🇲🇦',name:'MƏRRAKEŞ',tagline:'RƏNGARƏNG BAZAR & SARAY',color:'#C62828',bg:'#0a0000',
+    quickQ:['Mərrakeş-də nə görməli?','Medina turu?','Tagine harada yemək?','Mərrakeş büdcəsi?'],
+    videos:[{id:'1L6QCO3aYhM',title:'Marrakech 4K'}],
+    places:{tourist:['Jemaa el-Fna meydanı','Bahia Sarayı','Majorelle Bağçası','Medina bazarı'],restaurant:['Tagine restoranlar','Jemaa el-Fna küçə yeməyi','Riad naharı'],shopping:['Medina souq','Bahia Bazar'],hotel:['Royal Mansour','La Mamounia','Riad Fes']}},
+
+  reykjavik:{flag:'🇮🇸',name:'REYKYAVİK',tagline:'AURORA BOREALİS & FÖRDLƏR',color:'#1565C0',bg:'#000510',
+    quickQ:['Aurora borealis nə vaxt görünür?','Reykjavik-dən nə görməli?','Iceland büdcəsi?','Buzlaq turu?'],
+    videos:[{id:'EsRjnj3BKSY',title:'Iceland 4K'}],
+    places:{tourist:['Northern Lights turu','Blue Lagoon','Gullfoss şəlaləsi','Þingvellir milli parkı'],restaurant:['Reykjavik Fish & Chips','Lamb soup','Skyr'],shopping:['Laugavegur küçəsi'],hotel:['Reykjavik Konsulat','Hotel Borg','CenterHotel']}},
+
+  zurich:{flag:'🇨🇭',name:'SÜRİX',tagline:'İSVEÇRƏ DƏQIQLIYI & ALPLER',color:'#C62828',bg:'#0a0000',
+    quickQ:['Sürix-dən nə görməli?','Alplərə tur?','İsveçrə şokoladı harada?','Sürix büdcəsi?'],
+    videos:[{id:'4BKsI7BDPUE',title:'Zurich 4K'}],
+    places:{tourist:['Grossmünster kilsəsi','Zürichsee gölü','Langstrasse küçəsi','Kunsthaus muzeyi'],restaurant:['Fondue','Raclette','Züri Gschnätzlets'],shopping:['Bahnhofstrasse'],hotel:['Park Hyatt Zurich','Baur au Lac','The Dolder Grand']}},
+
+  lisbon2:{flag:'🇵🇹',name:'PORTO',tagline:'PORT ŞƏRABI & ƏZƏMƏTLI KÖRPÜ',color:'#E65100',bg:'#0a0200',
+    quickQ:['Porto-da nə görməli?','Port şərabı tastingi?','Porto büdcəsi?','Douro vadisi turu?'],
+    videos:[{id:'iGiAkFBpgO4',title:'Porto 4K'}],
+    places:{tourist:['Ribeira sahili','Dom Luís körpüsü','Livraria Lello','Douro vadisi'],restaurant:['Francesinha','Bacalhau (pollock)','Port şərabı'],shopping:['Rua de Santa Catarina'],hotel:['The Yeatman','Belmonte','Infante Sagres']}},
+
+  naples:{flag:'🇮🇹',name:'NEAPOL',tagline:'ORİJİNAL PİZZA & POMPEYA',color:'#1565C0',bg:'#000510',
+    quickQ:['Neapol-da nə görməli?','Pompeya turu?','Ən yaxşı pizza?','Neapol büdcəsi?'],
+    videos:[{id:'pKGkDYsMU_Q',title:'Naples 4K'}],
+    places:{tourist:['Pompeya','Capri adası','Castel dell Ovo','Spaccanapoli küçəsi'],restaurant:['Pizza Margherita (Antica Pizzeria da Michele)','Sfogliatella','Espresso'],shopping:['Via Toledo'],hotel:['Grand Hotel Vesuvio','Romeo Hotel','Castel dell Ovo Hotel']}},
+
+  oslo:{flag:'🇳🇴',name:'OSLO',tagline:'VİKİNQ TARİXİ & FYORDİ',color:'#1A237E',bg:'#000008',
+    quickQ:['Oslo-da nə görməli?','Viking Museum?','Norveç fiordları?','Oslo büdcəsi?'],
+    videos:[{id:'jAQl3U3DPGQ',title:'Oslo 4K'}],
+    places:{tourist:['Viking Ship Museum','Oslo Opera House','Vigeland Park','Holmenkollen'],restaurant:['Salmon','Brown cheese','Fårikål'],shopping:['Karl Johans Gate'],hotel:['The Thief','Grand Hotel Oslo','Continental']}},
+
+  copenhagen:{flag:'🇩🇰',name:'KOPENHAGEN',tagline:'DƏNİZ QIZI & AMUSEMENT PARK',color:'#C62828',bg:'#0a0000',
+    quickQ:['Kopenhagen-da nə görməli?','Tivoli Gardens?','Little Mermaid?','Kopenhagen büdcəsi?'],
+    videos:[{id:'LM_XYH5iyp4',title:'Copenhagen 4K'}],
+    places:{tourist:['Little Mermaid heykəli','Tivoli Gardens','Nyhavn','Christianborg Sarayı'],restaurant:['Smorrebrod','New Nordic cuisine','Hotdog'],shopping:['Strøget küçəsi'],hotel:['Hotel dAngleterre','Nimb Hotel','SP34']}},
+
+  stockholm:{flag:'🇸🇪',name:'STOKHOLM',tagline:'VASA GƏMİSİ & GAMLA STAN',color:'#1565C0',bg:'#000510',
+    quickQ:['Stokholm-da nə görməli?','Gamla Stan turu?','ABBA Museum?','Stokholm büdcəsi?'],
+    videos:[{id:'4LWGcgg8te0',title:'Stockholm 4K'}],
+    places:{tourist:['Gamla Stan (köhnə şəhər)','Vasa Museum','ABBA Museum','Skansen'],restaurant:['Meatballs','Gravlax','Kanelbulle'],shopping:['Drottninggatan'],hotel:['Grand Hôtel','At Six','Nobis Hotel']}},
+
+  helsinki:{flag:'🇫🇮',name:'HELSİNKİ',tagline:'SAUNA MƏDƏNIYYƏTI & DİZAYN',color:'#1565C0',bg:'#000510',
+    quickQ:['Helsinki-də nə görməli?','Sauna turu?','Suomenlinna qalası?','Helsinki büdcəsi?'],
+    videos:[{id:'XCFh9iZ6hFg',title:'Helsinki 4K'}],
+    places:{tourist:['Suomenlinna qalası','Helsinki Katedrali','Temppeliaukio kilsəsi','Market Square'],restaurant:['Karjalanpiirakka','Salmon soup','Salmiakki'],shopping:['Esplanade Park'],hotel:['Klaus K','Hotel Kamp','Scandic Grand Central']}},
+
+  warsaw:{flag:'🇵🇱',name:'VARŞAVA',tagline:'DIRÇƏLIŞ & TARIXI MƏRKƏZ',color:'#C62828',bg:'#0a0000',
+    quickQ:['Varşava-da nə görməli?','Chopin muzeyi?','Varşava büdcəsi?','Köhnə şəhər turu?'],
+    videos:[{id:'LyjHOGiX3gQ',title:'Warsaw 4K'}],
+    places:{tourist:['Köhnə şəhər meydanı','Chopin Muzeyi','Lazienki parkı','Warsaw Rising Museum'],restaurant:['Pierogi','Bigos','Żurek'],shopping:['Nowy Świat küçəsi'],hotel:['Hotel Bristol','Raffles Europejski','Novotel Centrum']}},
+
+  krakow:{flag:'🇵🇱',name:'KRAKOW',tagline:'WAWEL QALASI & ORTA ƏSR',color:'#1A237E',bg:'#000008',
+    quickQ:['Krakow-da nə görməli?','Auschwitz turu?','Wawel qalası?','Krakow büdcəsi?'],
+    videos:[{id:'pZ1nDGYoC_M',title:'Krakow 4K'}],
+    places:{tourist:['Wawel qalası','Rynek Główny meydanı','Kazimierz məhəlləsi','Auschwitz-Birkenau'],restaurant:['Pierogi','Oscypek','Bigos'],shopping:['Sukiennice (Cloth Hall)'],hotel:['Hotel Stary','Sheraton Grand','Pod Różą']}},
+
+  dubrovnik:{flag:'🇭🇷',name:'DUBROVNIK',tagline:'TAXT OYUNLARI ŞƏHƏRİ',color:'#F57F17',bg:'#0a0400',
+    quickQ:['Dubrovnik-da nə görməli?','Şəhər divarları turu?','Game of Thrones lokasiyas?','Dubrovnik büdcəsi?'],
+    videos:[{id:'Jm_o5j9dNfE',title:'Dubrovnik 4K'}],
+    places:{tourist:['Şəhər divarları','Stradun küçəsi','Fort Lovrijenac','Lokrum adası'],restaurant:['Adriatik balıq','Peka (lamb)','Prstaci'],shopping:['Stradun'],hotel:['Hotel Excelsior','Villa Orsula','Hilton Imperial']}},
+
+  tbilisi:{flag:'🇬🇪',name:'TBİLİSİ',tagline:'GÜRCÜ ŞƏRABI & QAFQAZ',color:'#B71C1C',bg:'#0a0000',
+    quickQ:['Tbilisi-də nə görməli?','Gürcü şərabı dequstasiyası?','Tbilisi büdcəsi?','Kazbegi turu?'],
+    videos:[{id:'pq1Pq4xn3EM',title:'Tbilisi 4K'}],
+    places:{tourist:['Narikala qalası','Mtkvari sahili','Abanotubani (hamam məhəlləsi)','Mtskheta'],restaurant:['Khinkali','Khachapuri','Churchkhela','Gürcü şərabı'],shopping:['Rustaveli prospekti'],hotel:['Rooms Hotel','Stamba Hotel','Hotel Betsy']}},
+
+  yerevan:{flag:'🇦🇲',name:'İRƏVAN',tagline:'ARARAT DAĞLARI & ERMƏNİ TARİXİ',color:'#E53935',bg:'#0a0000',
+    quickQ:['İrəvan-da nə görməli?','Ararat dağı?','Ermənistan büdcəsi?','Garni məbədi?'],
+    videos:[{id:'1XGJSGfkbSk',title:'Yerevan 4K'}],
+    places:{tourist:['Kaskad','Respublika meydanı','Genocide Memorial','Garni Məbədi'],restaurant:['Dolma','Khorovats (BBQ)','Lavash','Erməni konyakı'],shopping:['Vernissage bazarı'],hotel:['Marriott Armenia','The Alexander','Tufenkian Historic']}},
+
+  tashkent:{flag:'🇺🇿',name:'DAŞKƏND',tagline:'İPƏK YOLU & MÜASIR ÖZBƏKISTAN',color:'#1565C0',bg:'#000510',
+    quickQ:['Daşkənd-da nə görməli?','Səmərqənd turu?','Özbək plovü?','Daşkənd büdcəsi?'],
+    videos:[{id:'Q7tSHEYl2KU',title:'Tashkent 4K'}],
+    places:{tourist:['Xast İmom külliyyəsi','Çorsu bazarı','Amir Timur muzeyi','Navoiy teatrı'],restaurant:['Plov (aşplov)','Somsa','Lagman','Şurpa'],shopping:['Çorsu bazarı'],hotel:['Hyatt Regency Tashkent','Lotte City Hotel','Ramada']}},
+
+  samarkand:{flag:'🇺🇿',name:'SƏMƏRQƏND',tagline:'TİMURİLƏR VƏ İPƏK YOLU',color:'#6A1B9A',bg:'#0a0015',
+    quickQ:['Səmərqənd-da nə görməli?','Registan meydanı?','Səmərqənd büdcəsi?','Şahizinda?'],
+    videos:[{id:'wjcfZT7VIL0',title:'Samarkand 4K'}],
+    places:{tourist:['Registan meydanı','Gur-e-Amir mausoleyumu','Bibi-Xanım məscidi','Şahizinda'],restaurant:['Plov','Somsa','Non (çörək)'],shopping:['Siab bazarı'],hotel:['Registan Plaza','Samarkand Armada','Malika Prime']}},
+
+  kyoto:{flag:'🇯🇵',name:'KİOTO',tagline:'ŞİNTO MƏBƏDLƏRİ & SAKURAlar',color:'#AD1457',bg:'#0a0005',
+    quickQ:['Kioto-da nə görməli?','Fushimi Inari?','Geisha görəcəyim yer?','Kioto büdcəsi?'],
+    videos:[{id:'QJTM3sJpEk4',title:'Kyoto 4K'}],
+    places:{tourist:['Fushimi Inari Taisha','Kinkakuji (Qızıl Pavyon)','Arashiyama bambuk meşəsi','Gion məhəlləsi'],restaurant:['Kaiseki','Matcha','Tofu','Yudofu'],shopping:['Nishiki bazarı'],hotel:['The Ritz-Carlton Kyoto','Aman Kyoto','Hyatt Regency']}},
+
+  osaka:{flag:'🇯🇵',name:'OSAKA',tagline:'RAMEN, TAKOYAKI & GECE HƏYATI',color:'#F57F17',bg:'#0a0400',
+    quickQ:['Osaka-da nə görməli?','Dotonbori?','Universal Studios?','Osaka büdcəsi?'],
+    videos:[{id:'3x9e6XMVHEU',title:'Osaka 4K'}],
+    places:{tourist:['Osaka Qalası','Dotonbori','Universal Studios Japan','Namba'],restaurant:['Takoyaki','Okonomiyaki','Ramen','Kushikatsu'],shopping:['Shinsaibashi','Amerikamura'],hotel:['Conrad Osaka','InterContinental','The St. Regis']}},
+
+  hanoi:{flag:'🇻🇳',name:'HANOY',tagline:'PHO & KÖHNƏ ÇEYREK',color:'#C62828',bg:'#0a0000',
+    quickQ:['Hanoy-da nə görməli?','Ha Long Bay turu?','Pho harada yemək?','Hanoy büdcəsi?'],
+    videos:[{id:'V5ynOr-VGwM',title:'Hanoi 4K'}],
+    places:{tourist:['Köhnə Çeyrek','Ho Chi Minh Mausoleyumu','Hoan Kiem gölü','Ha Long Bay turu'],restaurant:['Pho Bo','Bun Cha','Banh Mi','Bia Hơi (yerli pivə)'],shopping:['Dong Xuan bazarı'],hotel:['Sofitel Legend Metropole','Capella Hanoi','La Siesta Premium']}},
+
+  hochiminh:{flag:'🇻🇳',name:'HO ŞI MİN',tagline:'SAYGON ENERJİSİ & MÜHARIBƏ TARİXİ',color:'#C62828',bg:'#0a0000',
+    quickQ:['Ho Şi Min-da nə görməli?','Cu Chi tunelləri?','War Remnants Museum?','Büdcə?'],
+    videos:[{id:'GpQBhBfJSX0',title:'Ho Chi Minh 4K'}],
+    places:{tourist:['Cu Chi tunelləri','War Remnants Museum','Reunification Palace','Ben Thanh bazarı'],restaurant:['Banh Mi','Bun Bo Hue','Com tam','Bia Hơi'],shopping:['Ben Thanh','Saigon Square'],hotel:['Park Hyatt Saigon','Caravelle','InterContinental']}},
+
+  kathmandu:{flag:'🇳🇵',name:'KATMANDU',tagline:'EVEREST VƏ BUDDA MƏBƏDLƏRİ',color:'#E53935',bg:'#0a0000',
+    quickQ:['Katmandu-da nə görməli?','Everest trekkinq?','Pashupatinath?','Büdcə?'],
+    videos:[{id:'YdZCRfpBPFQ',title:'Kathmandu 4K'}],
+    places:{tourist:['Swayambhunath (Monkey Temple)','Boudhanath stupa','Pashupatinath','Bhaktapur Durbar meydanı'],restaurant:['Dal Bhat','Momo (pelmeni)','Thukpa (şorba)'],shopping:['Thamel bazarı'],hotel:['Dwarikas Hotel','Hyatt Regency','Hotel Yak & Yeti']}},
+
+  muscat:{flag:'🇴🇲',name:'MUSKAT',tagline:'OMAN LÜKSÜ & ÇÖL',color:'#1B5E20',bg:'#000a02',
+    quickQ:['Muskat-da nə görməli?','Sultan Qaboos məscidi?','Oman büdcəsi?','Wahiba Sands?'],
+    videos:[{id:'J8VmPaL2FMY',title:'Muscat 4K'}],
+    places:{tourist:['Sultan Qaboos Böyük Məscidi','Mutrah Corniche','Nizwa qalası','Wahiba Sands'],restaurant:['Machboos','Harees','Shuwa','Halwa'],shopping:['Mutrah souq'],hotel:['The Chedi Muscat','Al Bustan Palace','W Muscat']}},
+
+  doha:{flag:'🇶🇦',name:'DOHA',tagline:'QATAR 2022 VƏ LÜKS',color:'#7B1FA2',bg:'#0a0010',
+    quickQ:['Doha-da nə görməli?','Museum of Islamic Art?','Doha büdcəsi?','Pearl Qatar?'],
+    videos:[{id:'SiZ-e-TGiOY',title:'Doha 4K'}],
+    places:{tourist:['Museum of Islamic Art','Souq Waqif','Pearl Qatar','Katara Cultural Village'],restaurant:['Machboos','Saloona','Harees'],shopping:['Villaggio Mall','Souq Waqif'],hotel:['Raffles Doha','Mandarin Oriental','W Doha']}},
+
+  tbilisi2:{flag:'🇬🇪',name:'BATUMİ',tagline:'QARADƏNİZ PLAJI & KAZİNO',color:'#006064',bg:'#000a0b',
+    quickQ:['Batumi-da nə görməli?','Batumi plajları?','Kazino?','Batumi büdcəsi?'],
+    videos:[{id:'cH8b5MzxzMk',title:'Batumi 4K'}],
+    places:{tourist:['Ali & Nino heykəli','Batumi Boulevard','Alfaburç','Çavçavadze prospekti'],restaurant:['Adjarian Khachapuri','Mtsvadi','Pkhali'],shopping:['Batumi Mall'],hotel:['Sheraton Batumi','Radisson Blu','Hilton Batumi']}},
+
+  losangeles:{flag:'🇺🇸',name:'LOS-ANCELES',tagline:'HOLLYWOOD & SÖRFÇÜLÜK',color:'#F57F17',bg:'#0a0400',
+    quickQ:['LA-da nə görməli?','Hollywood turu?','Beverly Hills?','LA büdcəsi?'],
+    videos:[{id:'SVlROmQkKe0',title:'Los Angeles 4K'}],
+    places:{tourist:['Hollywood Boulevard','Griffith Observatory','Santa Monica Pier','Getty Center'],restaurant:['InNOut Burger','Kogi BBQ','Pinks Hot Dogs','Nobu Malibu'],shopping:['Rodeo Drive','Melrose Ave'],hotel:['Chateau Marmont','The Beverly Hills Hotel','SLS']}},
+
+  chicago:{flag:'🇺🇸',name:'ÇİKAQO',tagline:'GÖYƏLTIRƏNLƏR & BLUES',color:'#1565C0',bg:'#000510',
+    quickQ:['Çikaqo-da nə görməli?','Chicago-style pizza?','Architecture boat tour?','Büdcə?'],
+    videos:[{id:'AhLdMiR6R60',title:'Chicago 4K'}],
+    places:{tourist:['Millennium Park','The Bean','Art Institute','Navy Pier'],restaurant:['Deep dish pizza','Chicago-style hot dog','Garrett popcorn'],shopping:['Magnificent Mile'],hotel:['The Peninsula','Loews Chicago','Kimpton Gray']}},
+
+  lasvegas:{flag:'🇺🇸',name:'LAS-VEQAS',tagline:'KAZİNO, ŞOU & ÇÖL',color:'#F50057',bg:'#0a000a',
+    quickQ:['Las Vegas-da nə görməli?','Hansı kazino?','Las Vegas büdcəsi?','Cirque du Soleil?'],
+    videos:[{id:'3SKNEwTGBNY',title:'Las Vegas 4K'}],
+    places:{tourist:['The Strip','Fremont Street','Grand Canyon turu','Bellagio fontanı'],restaurant:['Buffetlər','Gordon Ramsay Steak','Joël Robuchon'],shopping:['Forum Shops','The Cosmopolitan'],hotel:['Bellagio','Wynn','MGM Grand']}},
+
+  buenosaires:{flag:'🇦🇷',name:'BUENOS-AİRES',tagline:'TANGO, STEAK & AVROPA MEMAR',color:'#1565C0',bg:'#000510',
+    quickQ:['Buenos Aires-da nə görməli?','Tango show?','Asado (steak)?','Büdcə?'],
+    videos:[{id:'RkBlLRNqUsg',title:'Buenos Aires 4K'}],
+    places:{tourist:['La Boca','Recoleta Cemetery','Plaza de Mayo','Palermo məhəlləsi'],restaurant:['Asado (BBQ)','Empanadas','Dulce de leche','Medialunas'],shopping:['Palermo Soho'],hotel:['Four Seasons','Alvear Palace','Faena Hotel']}},
+
+  riodejaneiro:{flag:'🇧🇷',name:'RİO DE JANEYRObu',tagline:'KARNAVAl, PLAJ & CRISTO',color:'#1B5E20',bg:'#000a02',
+    quickQ:['Rio-da nə görməli?','Cristo Redentor?','Copacabana?','Rio büdcəsi?'],
+    videos:[{id:'m3LJvskpBjA',title:'Rio 4K'}],
+    places:{tourist:['Cristo Redentor','Copacabana plajı','Sugarloaf Dağı','Ipanema'],restaurant:['Churrasco','Feijoada','Coxinha','Açaí'],shopping:['Shopping Leblon'],hotel:['Copacabana Palace','Hotel Santa Teresa','Fasano']}},
+
+  shanghai:{flag:'🇨🇳',name:'ŞANXAY',tagline:'MEGAPOLIS & PUDONG SİLUETİ',color:'#C62828',bg:'#0a0000',
+    quickQ:['Şanxay-da nə görməli?','The Bund?','Yu Garden?','Şanxay büdcəsi?'],
+    videos:[{id:'vfMnpnJI7hs',title:'Shanghai 4K'}],
+    places:{tourist:['The Bund','Yu Garden','Shanghai Tower','French Concession'],restaurant:['Xiaolongbao (dump.)','Peking duck','Hairy crab','Din Tai Fung'],shopping:['Nanjing Road','Xintiandi'],hotel:['Peninsula Shanghai','Waldorf Astoria','The Middle House']}},
+
+  beijing:{flag:'🇨🇳',name:'PEKİN',tagline:'ÇİN SƏDDİ & YASAQ ŞƏHƏR',color:'#C62828',bg:'#0a0000',
+    quickQ:['Pekin-da nə görməli?','Çin Səddi turu?','Yasaq Şəhər?','Pekin büdcəsi?'],
+    videos:[{id:'bFtUQfN3Pss',title:'Beijing 4K'}],
+    places:{tourist:['Çin Səddi','Yasaq Şəhər','Tiananmen meydanı','Yaz Sarayı'],restaurant:['Pekin ördəyi','Kung Pao toyuq','Jianbing','Hot pot'],shopping:['Wangfujing küçəsi','Silk Market'],hotel:['The Peninsula Beijing','Aman at Summer Palace','Park Hyatt']}},
+
+  kualalumpur:{flag:'🇲🇾',name:'KUALA-LUMPUR',tagline:'PETRONAS VƏ MULTİKULTURAL',color:'#1565C0',bg:'#000510',
+    quickQ:['KL-da nə görməli?','Petronas Towers?','Batu Caves?','KL büdcəsi?'],
+    videos:[{id:'L7zf5YD9zJc',title:'Kuala Lumpur 4K'}],
+    places:{tourist:['Petronas Twin Towers','Batu Caves','KL Tower','Merdeka Square'],restaurant:['Nasi Lemak','Roti Canai','Char Kway Teow','Cendol'],shopping:['Bukit Bintang','Pavilion Mall'],hotel:['Mandarin Oriental','The Ritz-Carlton','Grand Hyatt']}},
+
+  manila:{flag:'🇵🇭',name:'MANİLA',tagline:'FİLİPPİN ADASI CƏNNƏTİ',color:'#1565C0',bg:'#000510',
+    quickQ:['Manila-da nə görməli?','Palawan adası?','Filipino mətbəxi?','Manila büdcəsi?'],
+    videos:[{id:'jOnGx7xFjbQ',title:'Manila 4K'}],
+    places:{tourist:['Intramuros','Rizal Park','BGC (Bonifacio Global City)','Palawan adası turu'],restaurant:['Adobo','Sinigang','Lechon','Halo-halo'],shopping:['SM Mall of Asia'],hotel:['Shangri-La','Manila Hotel','Conrad Manila']}},
+
+  colombo:{flag:'🇱🇰',name:'KOLOMBO',tagline:'SRİ LANKA ÇAY VƏ TAPINAQLAR',color:'#FF6F00',bg:'#0a0300',
+    quickQ:['Kolombo-da nə görməli?','Kandy turu?','Sri Lanka çayı?','Büdcə?'],
+    videos:[{id:'WYqXA91kh6A',title:'Colombo 4K'}],
+    places:{tourist:['Gangaramaya Məbədi','Colombo Milli Muzeyi','Galle Face Green','Lotus Tower'],restaurant:['Rice and Curry','Kottu Roti','Hoppers','Crab curry'],shopping:['Odel','Majestic City'],hotel:['Cinnamon Grand','The Kingsbury','Shangri-La Colombo']}},
+
+  nairobi:{flag:'🇰🇪',name:'NAİROBİ',tagline:'SAFARİ & AFRİKA MƏDƏNIYYƏTI',color:'#1B5E20',bg:'#000a02',
+    quickQ:['Nairobi-da nə görməli?','Masai Mara safari?','Nairobi büdcəsi?','Giraffe Centre?'],
+    videos:[{id:'0jY6mFN7B3k',title:'Nairobi 4K'}],
+    places:{tourist:['Nairobi Milli Parkı','Giraffe Centre','David Sheldrick Elephant Orphanage','Karen Blixen Museum'],restaurant:['Nyama Choma','Ugali','Sukuma Wiki','Kenyan tea'],shopping:['Village Market','Westgate'],hotel:['Hemingways Nairobi','The Tribe Hotel','Fairmont The Norfolk']}},
+
+  casablanca:{flag:'🇲🇦',name:'KASABLANKA',tagline:'HƏSƏN II MƏSCİDİ & FİLM',color:'#1565C0',bg:'#000510',
+    quickQ:['Kasablanka-da nə görməli?','Hassan II məscidi?','Ricks Cafe?','Büdcə?'],
+    videos:[{id:'pMX_0EHRpbQ',title:'Casablanca 4K'}],
+    places:{tourist:['Hassan II Məscidi','Corniche sahili','Old Medina','Mohammed V meydanı'],restaurant:['Tagine','Couscous','Harira shorbası','Pastilla'],shopping:['Maarif District'],hotel:['Sofitel Casablanca','Hyatt Regency','Four Seasons']}},
+
+  belgrade:{flag:'🇷🇸',name:'BELQRADbu',tagline:'GECƏ HƏYATI & TUNA ÇAYI',color:'#C62828',bg:'#0a0000',
+    quickQ:['Belqrad-da nə görməli?','Kalemegdan?','Belqrad gecə həyatı?','Büdcə?'],
+    videos:[{id:'0WLPM3I9mbc',title:'Belgrade 4K'}],
+    places:{tourist:['Kalemegdan Qalası','Skadarlija Bohem Küçəsi','St. Sava Kilsəsi','Zemun'],restaurant:['Ćevapi','Pljeskavica','Sarma','Rakija'],shopping:['Knez Mihailova küçəsi'],hotel:['Square Nine','Hyatt Regency','Hotel Moskva']}},
+
+  split:{flag:'🇭🇷',name:'SPLİT',tagline:'DİOKLETİAN SARAYI & ADRİATİK',color:'#0277BD',bg:'#00050a',
+    quickQ:['Split-da nə görməli?','Diocletian Sarayı?','Adriatik adaları?','Split büdcəsi?'],
+    videos:[{id:'mRvdV9bFgU8',title:'Split 4K'}],
+    places:{tourist:['Diocletian Sarayı','Klis qalası','Hvar adası','Brač adası'],restaurant:['Peka (lamb & veg)','Prstaci','Dalmatian prosciutto'],shopping:['Split Green Market'],hotel:['Hotel Vestibul Palace','Radisson Blu Resort','Park Hotel Split']}},
+
+  dubai3:{flag:'🇦🇪',name:'ŞARM ƏŞ-ŞEYX',tagline:'QİZİL PLAJLAR & MƏRCAN RIFLƏR',color:'#0277BD',bg:'#00050a',
+    quickQ:['Şarm-da nə görməli?','Dalğıcılıq?','Naama Bay?','Büdcə?'],
+    videos:[{id:'pz4a7UtT9ek',title:'Sharm El Sheikh 4K'}],
+    places:{tourist:['Ras Mohammed Milli Parkı','Naama Bay','Tiran adası','Old Market'],restaurant:['Seafood restoranlar','El Masrien','Hard Rock Cafe'],shopping:['Old Market'],hotel:['Four Seasons Sharm','Rixos Sharm','Ritz-Carlton']}},
+
+  losangeles2:{flag:'🇺🇸',name:'SAN-FRANSİSKO',tagline:'QİZİL QAPI KÖRPÜSÜ & SİLİKON',color:'#F57F17',bg:'#0a0400',
+    quickQ:['San Fransisko-da nə görməli?','Golden Gate?','Alcatraz?','SF büdcəsi?'],
+    videos:[{id:'ZfAqHBJa9DM',title:'San Francisco 4K'}],
+    places:{tourist:['Golden Gate Bridge','Alcatraz adası','Fishermans Wharf','Chinatown'],restaurant:['Sourdough bread','Dungeness crab','Mission burrito','Ghirardelli şokoladı'],shopping:['Union Square'],hotel:['The Fairmont','Palace Hotel','Kimpton Sir Francis Drake']}},
+
+
+};
+
+const CM={
+  'dubai':'dubai','дубай':'dubai','dubay':'dubai',
+  'istanbul':'istanbul','İstanbul':'istanbul','стамбул':'istanbul',
+  'kahire':'kahire','cairo':'kahire','каир':'kahire','misir':'kahire','egypt':'kahire','qahirə':'kahire','qahire':'kahire',
+  'luxor':'luxor','lüksör':'luxor','луксор':'luxor',
+  'paris':'paris','париж':'paris',
+  'bali':'bali','бали':'bali',
+  'tokyo':'tokyo','токио':'tokyo',
+  'baku':'baku','bakı':'baku','баку':'baku','baki':'baku',
+  'rome':'rome','roma':'rome','рим':'rome',
+  'barcelona':'barcelona','barselona':'barcelona','барселона':'barcelona',
+  'new york':'newyork','nyu york':'newyork','newyork':'newyork',
+  'maldives':'maldives','maldiv':'maldives','мальдивы':'maldives',
+  'singapore':'singapore','sinqapur':'singapore','сингапур':'singapore',
+  'london':'london','лондон':'london',
+  'amsterdam':'amsterdam','амстердам':'amsterdam',
+  'prague':'prague','praqa':'prague','прага':'prague','prag':'prague',
+  'vienna':'vienna','vyana':'vienna','wien':'vienna','вена':'vienna',
+  'budapest':'budapest','budapeşt':'budapest','будапешт':'budapest',
+  'santorini':'santorini','санторини':'santorini',
+  'antalya':'antalya','анталья':'antalya',
+  'bangkok':'bangkok','бангкок':'bangkok',
+  'madrid':'madrid','мадрид':'madrid',
+  'lisbon':'lisbon','lissabon':'lisbon','lisboa':'lisbon','лиссабон':'lisbon',
+  'athens':'athens','afina':'athens','atina':'athens','афины':'athens',
+  'florence':'florence','florensiya':'florence','firenze':'florence',
+  'venice':'venice','venesiya':'venice','venezia':'venice','венеция':'venice',
+  'miami':'miami','майями':'miami',
+  'phuket':'phuket','пхукет':'phuket',
+  'cancun':'cancun','kankun':'cancun','канкун':'cancun',
+  'sydney':'sydney','sidney':'sydney','сидней':'sydney',
+  'toronto':'toronto','торонто':'toronto',
+  'hurghada':'hurghada','hurgada':'hurghada','хургада':'hurghada',
+  'seoul':'seoul','seul':'seoul','сеул':'seoul',
+  'abu dhabi':'dubai2','abu dabi':'dubai2','əbu dabi':'dubai2','أبوظبي':'dubai2',
+  'capetown':'capetown','cape town':'capetown','kape tauny':'capetown','кейптаун':'capetown',
+  'marrakech':'marrakech','mərrakeş':'marrakech','марракеш':'marrakech','marrakesh':'marrakech',
+  'reykjavik':'reykjavik','reykjavík':'reykjavik','рейкьявик':'reykjavik',
+  'zurich':'zurich','sürix':'zurich','цюрих':'zurich','zürich':'zurich',
+  'porto':'lisbon2','порту':'lisbon2',
+  'naples':'naples','neapol':'naples','napoli':'naples','неаполь':'naples',
+  'oslo':'oslo','осло':'oslo',
+  'copenhagen':'copenhagen','kopenhagen':'copenhagen','копенгаген':'copenhagen',
+  'stockholm':'stockholm','stokholm':'stockholm','стокгольм':'stockholm',
+  'helsinki':'helsinki','хельсинки':'helsinki',
+  'warsaw':'warsaw','varşava':'warsaw','warszawa':'warsaw','варшава':'warsaw',
+  'krakow':'krakow','краков':'krakow','kraków':'krakow',
+  'dubrovnik':'dubrovnik','дубровник':'dubrovnik',
+  'split':'split','сплит':'split',
+  'belgrade':'belgrade','belqrad':'belgrade','beograd':'belgrade','белград':'belgrade',
+  'tbilisi':'tbilisi','тбилиси':'tbilisi','tiflis':'tbilisi',
+  'yerevan':'yerevan','irəvan':'yerevan','ереван':'yerevan',
+  'tashkent':'tashkent','daşkənd':'tashkent','тошкент':'tashkent',
+  'samarkand':'samarkand','səmərqənd':'samarkand','самарканд':'samarkand',
+  'kyoto':'kyoto','kioto':'kyoto','киото':'kyoto',
+  'osaka':'osaka','осака':'osaka',
+  'hanoi':'hanoi','hanoy':'hanoi','ханой':'hanoi',
+  'ho chi minh':'hochiminh','ho şi min':'hochiminh','saigon':'hochiminh',
+  'kathmandu':'kathmandu','katmandu':'kathmandu','катманду':'kathmandu',
+  'muscat':'muscat','muskat':'muscat','маскат':'muscat',
+  'doha':'doha','доха':'doha',
+  'beirut':'beirut','beyrut':'beirut','бейрут':'beirut',
+  'amman':'amman','амман':'amman',
+  'casablanca':'casablanca','kasablanka':'casablanca',
+  'tunis':'tunis','тунис':'tunis',
+  'nairobi':'nairobi','найроби':'nairobi',
+  'mombasa':'mombasa','момбаса':'mombasa',
+  'los angeles':'losangeles','los-anceles':'losangeles','лос-анджелес':'losangeles',
+  'chicago':'chicago','çikaqo':'chicago','чикаго':'chicago',
+  'las vegas':'lasvegas','las-veqas':'lasvegas','лас-вегас':'lasvegas',
+  'san francisco':'sanfrancisco','san fransisko':'sanfrancisco',
+  'havana':'havana','гавана':'havana',
+  'bogota':'bogota','boqota':'bogota','богота':'bogota','bogotá':'bogota',
+  'buenos aires':'buenosaires','buenos-aires':'buenosaires','буэнос-айрес':'buenosaires',
+  'rio de janeiro':'riodejaneiro','rio de janeyro':'riodejaneiro',
+  'lima':'lima','лима':'lima',
+  'melbourne':'melbourne','melburn':'melbourne','мельбурн':'melbourne',
+  'auckland':'auckland','oklend':'auckland',
+  'shanghai':'shanghai','şanxay':'shanghai','шанхай':'shanghai',
+  'beijing':'beijing','pekin':'beijing','пекин':'beijing',
+  'taipei':'taipei','taypey':'taipei',
+  'manila':'manila','манила':'manila',
+  'jakarta':'jakarta','cakarta':'jakarta','джакарта':'jakarta',
+  'kuala lumpur':'kualalumpur','kl':'kualalumpur','куала-лумпур':'kualalumpur',
+  'batumi':'tbilisi2','батуми':'tbilisi2',
+  'sharm':'dubai3','sharm el sheikh':'dubai3','şarm əş-şeyx':'dubai3',
+  'colombo':'colombo','кolombo':'colombo',
+  'kathmandu':'kathmandu',
+};
+
+const POP_CITIES=[
+  // ===== ƏN POPULYAR =====
+  {key:'dubai',      flag:'🇦🇪',name:'Dubai',        count:'⭐ Top'},
+  {key:'istanbul',   flag:'🇹🇷',name:'İstanbul',     count:'🔥 Trend'},
+  {key:'baku',       flag:'🇦🇿',name:'Bakı',         count:'🏠 Ev'},
+  {key:'kahire',     flag:'🇪🇬',name:'Kahirə',       count:'🏛️ Tarix'},
+  {key:'paris',      flag:'🇫🇷',name:'Paris',        count:'💑 Romantik'},
+  {key:'tokyo',      flag:'🇯🇵',name:'Tokyo',        count:'🌸 Unikal'},
+  {key:'bali',       flag:'🇮🇩',name:'Bali',         count:'🌴 Cənnət'},
+  {key:'rome',       flag:'🇮🇹',name:'Roma',         count:'🍕 Klassik'},
+  {key:'barcelona',  flag:'🇪🇸',name:'Barselona',    count:'🎨 Sənət'},
+  {key:'newyork',    flag:'🇺🇸',name:'New York',     count:'🗽 İkona'},
+  {key:'maldives',   flag:'🇲🇻',name:'Maldiv',       count:'🐠 Dəniz'},
+  {key:'luxor',      flag:'🇪🇬',name:'Lüksör',       count:'🏺 Əfsanə'},
+  {key:'singapore',  flag:'🇸🇬',name:'Sinqapur',     count:'🌆 Futurist'},
+  {key:'london',     flag:'🇬🇧',name:'London',       count:'☕ Kraliçə'},
+  {key:'amsterdam',  flag:'🇳🇱',name:'Amsterdam',    count:'🚲 Kanal'},
+  {key:'prague',     flag:'🇨🇿',name:'Praqa',        count:'🏰 Sehrli'},
+  {key:'vienna',     flag:'🇦🇹',name:'Vyana',        count:'🎵 Klassik'},
+  {key:'budapest',   flag:'🇭🇺',name:'Budapeşt',     count:'🌉 Gözəl'},
+  {key:'santorini',  flag:'🇬🇷',name:'Santorini',    count:'🌅 Sunset'},
+  {key:'antalya',    flag:'🇹🇷',name:'Antalya',      count:'🏖️ Plaj'},
+  {key:'bangkok',    flag:'🇹🇭',name:'Bangkok',      count:'🛕 Tapınak'},
+  {key:'madrid',     flag:'🇪🇸',name:'Madrid',       count:'⚽ Həyat'},
+  {key:'lisbon',     flag:'🇵🇹',name:'Lissabon',     count:'🍊 Maraqlı'},
+  {key:'athens',     flag:'🇬🇷',name:'Afina',        count:'🏛️ Olimp'},
+  {key:'florence',   flag:'🇮🇹',name:'Florensiya',   count:'🖼️ Rəsm'},
+  {key:'venice',     flag:'🇮🇹',name:'Venesiya',     count:'🚤 Qondola'},
+  {key:'miami',      flag:'🇺🇸',name:'Miami',        count:'🌴 Enerji'},
+  {key:'phuket',     flag:'🇹🇭',name:'Phuket',       count:'🏝️ Ada'},
+  {key:'cancun',     flag:'🇲🇽',name:'Kankun',       count:'🌊 Karib'},
+  {key:'sydney',     flag:'🇦🇺',name:'Sidney',       count:'🦘 Unikal'},
+  {key:'toronto',    flag:'🇨🇦',name:'Toronto',      count:'🍁 Kanada'},
+  {key:'hurghada',   flag:'🇪🇬',name:'Hurgada',      count:'🤿 Diving'},
+  // ===== YENİ ŞƏHİRLƏR =====
+  {key:'seoul',      flag:'🇰🇷',name:'Seul',         count:'🎮 K-Pop'},
+  {key:'dubai2',     flag:'🇦🇪',name:'Abu Dabi',     count:'🏎️ Formula'},
+  {key:'capetown',   flag:'🇿🇦',name:'Kape Tauny',   count:'🦁 Safari'},
+  {key:'marrakech',  flag:'🇲🇦',name:'Mərrakeş',     count:'🐪 Ekzotik'},
+  {key:'reykjavik',  flag:'🇮🇸',name:'Reykjavik',    count:'🌌 Aurora'},
+  {key:'zurich',     flag:'🇨🇭',name:'Sürix',        count:'🏔️ İsveçrə'},
+  {key:'dubai3',     flag:'🇦🇪',name:'Şarm əş-Şeyx', count:'🤿 Dalğıc'},
+  {key:'lisbon2',    flag:'🇵🇹',name:'Porto',        count:'🍷 Şərab'},
+  {key:'naples',     flag:'🇮🇹',name:'Neapol',       count:'🍕 Original'},
+  {key:'oslo',       flag:'🇳🇴',name:'Oslo',         count:'🌊 Fiord'},
+  {key:'copenhagen', flag:'🇩🇰',name:'Kopenhagen',   count:'🧜 Sirkə'},
+  {key:'stockholm',  flag:'🇸🇪',name:'Stokholm',     count:'🏅 Nobel'},
+  {key:'helsinki',   flag:'🇫🇮',name:'Helsinki',     count:'🛁 Sauna'},
+  {key:'warsaw',     flag:'🇵🇱',name:'Varşava',      count:'🏰 Dirçəliş'},
+  {key:'krakow',     flag:'🇵🇱',name:'Krakow',       count:'🏯 Qala'},
+  {key:'dubrovnik',  flag:'🇭🇷',name:'Dubrovnik',    count:'🐉 Taxt Oyunu'},
+  {key:'split',      flag:'🇭🇷',name:'Split',        count:'🌊 Adriatik'},
+  {key:'belgrade',   flag:'🇷🇸',name:'Belqrad',      count:'🎵 Gecə'},
+  {key:'tbilisi',    flag:'🇬🇪',name:'Tbilisi',      count:'🍷 Üzüm'},
+  {key:'yerevan',    flag:'🇦🇲',name:'İrəvan',       count:'🏔️ Ararat'},
+  {key:'tashkent',   flag:'🇺🇿',name:'Daşkənd',      count:'🕌 İpək'},
+  {key:'samarkand',  flag:'🇺🇿',name:'Səmərqənd',    count:'🏛️ Timurid'},
+  {key:'kyoto',      flag:'🇯🇵',name:'Kioto',        count:'⛩️ Şinto'},
+  {key:'osaka',      flag:'🇯🇵',name:'Osaka',        count:'🍜 Ramen'},
+  {key:'hanoi',      flag:'🇻🇳',name:'Hanoy',        count:'🍜 Pho'},
+  {key:'hochiminh',  flag:'🇻🇳',name:'Ho Şi Min',    count:'🛵 Enerji'},
+  {key:'colombo',    flag:'🇱🇰',name:'Kolombo',      count:'🌿 Çay'},
+  {key:'kathmandu',  flag:'🇳🇵',name:'Katmandu',     count:'🏔️ Everest'},
+  {key:'muscat',     flag:'🇴🇲',name:'Muskat',       count:'🏜️ Oman'},
+  {key:'doha',       flag:'🇶🇦',name:'Doha',         count:'🏟️ Qatar'},
+  {key:'beirut',     flag:'🇱🇧',name:'Beyrut',       count:'🌹 Livan'},
+  {key:'amman',      flag:'🇯🇴',name:'Amman',        count:'🏺 Petra'},
+  {key:'casablanca', flag:'🇲🇦',name:'Kasablanka',   count:'🎬 Film'},
+  {key:'tunis',      flag:'🇹🇳',name:'Tunis',        count:'🏺 Karfagen'},
+  {key:'nairobi',    flag:'🇰🇪',name:'Nairobi',      count:'🦒 Safari'},
+  {key:'mombasa',    flag:'🇰🇪',name:'Mombasa',      count:'🌊 Afrika'},
+  {key:'losangeles', flag:'🇺🇸',name:'Los-Anceles',  count:'🎬 Hollywood'},
+  {key:'chicago',    flag:'🇺🇸',name:'Çikaqo',       count:'🎵 Blues'},
+  {key:'lasvegas',   flag:'🇺🇸',name:'Las-Veqas',    count:'🎰 Qumbar'},
+  {key:'sanfrancisco',flag:'🇺🇸',name:'San-Fransisko',count:'🌉 Körpü'},
+  {key:'havana',     flag:'🇨🇺',name:'Havana',       count:'🚗 Klassik'},
+  {key:'bogota',     flag:'🇨🇴',name:'Boqota',       count:'☕ Qəhvə'},
+  {key:'buenosaires',flag:'🇦🇷',name:'Buenos-Aires', count:'💃 Tango'},
+  {key:'riodejaneiro',flag:'🇧🇷',name:'Rio de Janeyro',count:'🎭 Karnaval'},
+  {key:'lima',       flag:'🇵🇪',name:'Lima',         count:'🍽️ Gastro'},
+  {key:'melbourne',  flag:'🇦🇺',name:'Melburn',      count:'🏏 Kriket'},
+  {key:'auckland',   flag:'🇳🇿',name:'Oklend',       count:'🥝 Kivi'},
+  {key:'shanghai',   flag:'🇨🇳',name:'Şanxay',       count:'🌆 Megapolis'},
+  {key:'beijing',    flag:'🇨🇳',name:'Pekin',        count:'🏯 Çin Səddi'},
+  {key:'taipei',     flag:'🇹🇼',name:'Taypey',       count:'🫖 Çay'},
+  {key:'manila',     flag:'🇵🇭',name:'Manila',       count:'🏝️ Filippin'},
+  {key:'jakarta',    flag:'🇮🇩',name:'Cakarta',      count:'🌴 Indonesia'},
+  {key:'kualalumpur',flag:'🇲🇾',name:'Kuala-Lumpur', count:'🏙️ Petronas'},
+  {key:'colombo2',   flag:'🇱🇰',name:'Kandy',        count:'🌿 Buddizm'},
+  {key:'tbilisi2',   flag:'🇬🇪',name:'Batumi',       count:'🎡 Çalanda'},
+];
+
+
+const CITY_WEATHER={
+  dubai:      {lat:25.20, lon:55.27},
+  kahire:     {lat:30.06, lon:31.24},
+  luxor:      {lat:25.69, lon:32.64},
+  istanbul:   {lat:41.01, lon:28.95},
+  paris:      {lat:48.85, lon:2.35},
+  baku:       {lat:40.41, lon:49.87},
+  tokyo:      {lat:35.68, lon:139.69},
+  bali:       {lat:-8.65, lon:115.22},
+  rome:       {lat:41.90, lon:12.50},
+  barcelona:  {lat:41.39, lon:2.15},
+  newyork:    {lat:40.71, lon:-74.01},
+  maldives:   {lat:4.17,  lon:73.51},
+  singapore:  {lat:1.35,  lon:103.82},
+  london:     {lat:51.51, lon:-0.13},
+  amsterdam:  {lat:52.37, lon:4.90},
+  prague:     {lat:50.08, lon:14.44},
+  vienna:     {lat:48.21, lon:16.37},
+  budapest:   {lat:47.50, lon:19.04},
+  santorini:  {lat:36.40, lon:25.46},
+  antalya:    {lat:36.89, lon:30.71},
+  bangkok:    {lat:13.75, lon:100.52},
+  madrid:     {lat:40.42, lon:-3.70},
+  lisbon:     {lat:38.72, lon:-9.14},
+  athens:     {lat:37.98, lon:23.73},
+  florence:   {lat:43.77, lon:11.26},
+  venice:     {lat:45.44, lon:12.32},
+  miami:      {lat:25.77, lon:-80.19},
+  phuket:     {lat:7.88,  lon:98.40},
+  cancun:     {lat:21.16, lon:-86.85},
+  sydney:     {lat:-33.87,lon:151.21},
+  toronto:    {lat:43.65, lon:-79.38},
+  hurghada:   {lat:27.26, lon:33.81},
+  // Yeni şəhərlər
+  seoul:      {lat:37.57, lon:126.98},
+  dubai2:     {lat:24.47, lon:54.37},
+  capetown:   {lat:-33.93,lon:18.42},
+  marrakech:  {lat:31.63, lon:-7.99},
+  reykjavik:  {lat:64.13, lon:-21.82},
+  zurich:     {lat:47.38, lon:8.54},
+  lisbon2:    {lat:41.16, lon:-8.63},
+  naples:     {lat:40.85, lon:14.27},
+  oslo:       {lat:59.91, lon:10.75},
+  copenhagen: {lat:55.68, lon:12.57},
+  stockholm:  {lat:59.33, lon:18.07},
+  helsinki:   {lat:60.17, lon:24.94},
+  warsaw:     {lat:52.23, lon:21.01},
+  krakow:     {lat:50.06, lon:19.94},
+  dubrovnik:  {lat:42.65, lon:18.09},
+  split:      {lat:43.51, lon:16.44},
+  belgrade:   {lat:44.80, lon:20.46},
+  tbilisi:    {lat:41.69, lon:44.83},
+  yerevan:    {lat:40.18, lon:44.51},
+  tashkent:   {lat:41.30, lon:69.24},
+  samarkand:  {lat:39.65, lon:66.96},
+  kyoto:      {lat:35.01, lon:135.77},
+  osaka:      {lat:34.69, lon:135.50},
+  hanoi:      {lat:21.03, lon:105.84},
+  hochiminh:  {lat:10.82, lon:106.63},
+  colombo:    {lat:6.93,  lon:79.85},
+  kathmandu:  {lat:27.72, lon:85.32},
+  muscat:     {lat:23.59, lon:58.41},
+  doha:       {lat:25.29, lon:51.53},
+  beirut:     {lat:33.89, lon:35.50},
+  amman:      {lat:31.96, lon:35.95},
+  casablanca: {lat:33.59, lon:-7.62},
+  tunis:      {lat:36.82, lon:10.17},
+  nairobi:    {lat:-1.29, lon:36.82},
+  mombasa:    {lat:-4.05, lon:39.67},
+  losangeles: {lat:34.05, lon:-118.24},
+  chicago:    {lat:41.88, lon:-87.63},
+  lasvegas:   {lat:36.17, lon:-115.14},
+  sanfrancisco:{lat:37.77,lon:-122.42},
+  losangeles2:{lat:37.77, lon:-122.42},
+  havana:     {lat:23.13, lon:-82.38},
+  bogota:     {lat:4.71,  lon:-74.07},
+  buenosaires:{lat:-34.61,lon:-58.38},
+  riodejaneiro:{lat:-22.91,lon:-43.17},
+  lima:       {lat:-12.05,lon:-77.04},
+  melbourne:  {lat:-37.81,lon:144.96},
+  auckland:   {lat:-36.87,lon:174.77},
+  shanghai:   {lat:31.23, lon:121.47},
+  beijing:    {lat:39.91, lon:116.39},
+  taipei:     {lat:25.05, lon:121.53},
+  manila:     {lat:14.60, lon:120.98},
+  jakarta:    {lat:-6.21, lon:106.85},
+  kualalumpur:{lat:3.15,  lon:101.69},
+  tbilisi2:   {lat:41.65, lon:41.64},
+  dubai3:     {lat:27.91, lon:34.33},
+  colombo2:   {lat:7.29,  lon:80.64},
+  moscow:     {lat:55.75, lon:37.62},
+  beijing2:   {lat:39.91, lon:116.39},
+};
+
+const CITY_CURRENCY={
+  dubai:      {code:'AED',name:'Dirhəm',        symbol:'د.إ',flag:'🇦🇪',rate:3.67},
+  kahire:     {code:'EGP',name:'Misir Poundu',  symbol:'E£', flag:'🇪🇬',rate:48.5},
+  luxor:      {code:'EGP',name:'Misir Poundu',  symbol:'E£', flag:'🇪🇬',rate:48.5},
+  hurghada:   {code:'EGP',name:'Misir Poundu',  symbol:'E£', flag:'🇪🇬',rate:48.5},
+  istanbul:   {code:'TRY',name:'Türk Lirəsi',   symbol:'₺',  flag:'🇹🇷',rate:32.5},
+  antalya:    {code:'TRY',name:'Türk Lirəsi',   symbol:'₺',  flag:'🇹🇷',rate:32.5},
+  paris:      {code:'EUR',name:'Avro',           symbol:'€',  flag:'🇪🇺',rate:0.92},
+  rome:       {code:'EUR',name:'Avro',           symbol:'€',  flag:'🇪🇺',rate:0.92},
+  barcelona:  {code:'EUR',name:'Avro',           symbol:'€',  flag:'🇪🇺',rate:0.92},
+  madrid:     {code:'EUR',name:'Avro',           symbol:'€',  flag:'🇪🇺',rate:0.92},
+  amsterdam:  {code:'EUR',name:'Avro',           symbol:'€',  flag:'🇪🇺',rate:0.92},
+  vienna:     {code:'EUR',name:'Avro',           symbol:'€',  flag:'🇪🇺',rate:0.92},
+  santorini:  {code:'EUR',name:'Avro',           symbol:'€',  flag:'🇪🇺',rate:0.92},
+  lisbon:     {code:'EUR',name:'Avro',           symbol:'€',  flag:'🇪🇺',rate:0.92},
+  athens:     {code:'EUR',name:'Avro',           symbol:'€',  flag:'🇪🇺',rate:0.92},
+  florence:   {code:'EUR',name:'Avro',           symbol:'€',  flag:'🇪🇺',rate:0.92},
+  venice:     {code:'EUR',name:'Avro',           symbol:'€',  flag:'🇪🇺',rate:0.92},
+  naples:     {code:'EUR',name:'Avro',           symbol:'€',  flag:'🇪🇺',rate:0.92},
+  baku:       {code:'AZN',name:'Manat',          symbol:'₼',  flag:'🇦🇿',rate:1.70},
+  tokyo:      {code:'JPY',name:'Yen',            symbol:'¥',  flag:'🇯🇵',rate:149.5},
+  kyoto:      {code:'JPY',name:'Yen',            symbol:'¥',  flag:'🇯🇵',rate:149.5},
+  osaka:      {code:'JPY',name:'Yen',            symbol:'¥',  flag:'🇯🇵',rate:149.5},
+  bali:       {code:'IDR',name:'Rupiya',         symbol:'Rp', flag:'🇮🇩',rate:15600},
+  jakarta:    {code:'IDR',name:'Rupiya',         symbol:'Rp', flag:'🇮🇩',rate:15600},
+  newyork:    {code:'USD',name:'Dollar',         symbol:'$',  flag:'🇺🇸',rate:1.0},
+  miami:      {code:'USD',name:'Dollar',         symbol:'$',  flag:'🇺🇸',rate:1.0},
+  losangeles: {code:'USD',name:'Dollar',         symbol:'$',  flag:'🇺🇸',rate:1.0},
+  chicago:    {code:'USD',name:'Dollar',         symbol:'$',  flag:'🇺🇸',rate:1.0},
+  lasvegas:   {code:'USD',name:'Dollar',         symbol:'$',  flag:'🇺🇸',rate:1.0},
+  sanfrancisco:{code:'USD',name:'Dollar',        symbol:'$',  flag:'🇺🇸',rate:1.0},
+  losangeles2:{code:'USD',name:'Dollar',         symbol:'$',  flag:'🇺🇸',rate:1.0},
+  maldives:   {code:'MVR',name:'Rufiyaa',        symbol:'Rf', flag:'🇲🇻',rate:15.4},
+  singapore:  {code:'SGD',name:'Sinq. Dolları',  symbol:'S$', flag:'🇸🇬',rate:1.34},
+  london:     {code:'GBP',name:'Funt Sterlinq',  symbol:'£',  flag:'🇬🇧',rate:0.79},
+  prague:     {code:'CZK',name:'Çex Kronu',      symbol:'Kč', flag:'🇨🇿',rate:23.1},
+  budapest:   {code:'HUF',name:'Forint',         symbol:'Ft', flag:'🇭🇺',rate:362},
+  bangkok:    {code:'THB',name:'Baht',           symbol:'฿',  flag:'🇹🇭',rate:35.2},
+  phuket:     {code:'THB',name:'Baht',           symbol:'฿',  flag:'🇹🇭',rate:35.2},
+  cancun:     {code:'MXN',name:'Meksika Pesosu', symbol:'$',  flag:'🇲🇽',rate:17.2},
+  sydney:     {code:'AUD',name:'Avstr. Dolları', symbol:'A$', flag:'🇦🇺',rate:1.53},
+  melbourne:  {code:'AUD',name:'Avstr. Dolları', symbol:'A$', flag:'🇦🇺',rate:1.53},
+  auckland:   {code:'NZD',name:'Yeni Zeland. $', symbol:'NZ$',flag:'🇳🇿',rate:1.63},
+  toronto:    {code:'CAD',name:'Kanad. Dolları', symbol:'C$', flag:'🇨🇦',rate:1.36},
+  // Yeni şəhərlər
+  seoul:      {code:'KRW',name:'Koreya Vonu',    symbol:'₩',  flag:'🇰🇷',rate:1320},
+  dubai2:     {code:'AED',name:'Dirhəm',         symbol:'د.إ',flag:'🇦🇪',rate:3.67},
+  dubai3:     {code:'EGP',name:'Misir Poundu',   symbol:'E£', flag:'🇪🇬',rate:48.5},
+  capetown:   {code:'ZAR',name:'Cənubi Afrika R.',symbol:'R', flag:'🇿🇦',rate:18.6},
+  marrakech:  {code:'MAD',name:'Mərakeş Dirhəmi',symbol:'MAD',flag:'🇲🇦',rate:10.0},
+  reykjavik:  {code:'ISK',name:'İslandiya Kronu',symbol:'kr', flag:'🇮🇸',rate:136},
+  zurich:     {code:'CHF',name:'İsveçrə Frankı', symbol:'Fr', flag:'🇨🇭',rate:0.89},
+  lisbon2:    {code:'EUR',name:'Avro',            symbol:'€',  flag:'🇪🇺',rate:0.92},
+  oslo:       {code:'NOK',name:'Norveç Kronu',   symbol:'kr', flag:'🇳🇴',rate:10.5},
+  copenhagen: {code:'DKK',name:'Danimarka Kronu',symbol:'kr', flag:'🇩🇰',rate:6.88},
+  stockholm:  {code:'SEK',name:'İsveç Kronu',    symbol:'kr', flag:'🇸🇪',rate:10.4},
+  helsinki:   {code:'EUR',name:'Avro',            symbol:'€',  flag:'🇪🇺',rate:0.92},
+  warsaw:     {code:'PLN',name:'Polşa Zlotısı',  symbol:'zł', flag:'🇵🇱',rate:3.98},
+  krakow:     {code:'PLN',name:'Polşa Zlotısı',  symbol:'zł', flag:'🇵🇱',rate:3.98},
+  dubrovnik:  {code:'EUR',name:'Avro',            symbol:'€',  flag:'🇪🇺',rate:0.92},
+  split:      {code:'EUR',name:'Avro',            symbol:'€',  flag:'🇪🇺',rate:0.92},
+  belgrade:   {code:'RSD',name:'Serbiya Dinarı', symbol:'din',flag:'🇷🇸',rate:108},
+  tbilisi:    {code:'GEL',name:'Gürcü Larisi',   symbol:'₾',  flag:'🇬🇪',rate:2.68},
+  tbilisi2:   {code:'GEL',name:'Gürcü Larisi',   symbol:'₾',  flag:'🇬🇪',rate:2.68},
+  yerevan:    {code:'AMD',name:'Ermənistan Drami',symbol:'֏',  flag:'🇦🇲',rate:396},
+  tashkent:   {code:'UZS',name:'Özbək Somu',     symbol:'soʻm',flag:'🇺🇿',rate:12300},
+  samarkand:  {code:'UZS',name:'Özbək Somu',     symbol:'soʻm',flag:'🇺🇿',rate:12300},
+  hanoi:      {code:'VND',name:'Vyetnam Donqu',   symbol:'₫',  flag:'🇻🇳',rate:24500},
+  hochiminh:  {code:'VND',name:'Vyetnam Donqu',   symbol:'₫',  flag:'🇻🇳',rate:24500},
+  colombo:    {code:'LKR',name:'Sri Lanka Rupisi',symbol:'Rs', flag:'🇱🇰',rate:299},
+  colombo2:   {code:'LKR',name:'Sri Lanka Rupisi',symbol:'Rs', flag:'🇱🇰',rate:299},
+  kathmandu:  {code:'NPR',name:'Nepal Rupisi',    symbol:'Rs', flag:'🇳🇵',rate:132},
+  muscat:     {code:'OMR',name:'Oman Riyalı',     symbol:'R.O',flag:'🇴🇲',rate:0.385},
+  doha:       {code:'QAR',name:'Qətər Riyalı',   symbol:'QR', flag:'🇶🇦',rate:3.64},
+  beirut:     {code:'USD',name:'Dollar (rəsmi)',  symbol:'$',  flag:'🇱🇧',rate:1.0},
+  amman:      {code:'JOD',name:'İordaniya Dinarı',symbol:'JD', flag:'🇯🇴',rate:0.71},
+  casablanca: {code:'MAD',name:'Mərakeş Dirhəmi',symbol:'MAD',flag:'🇲🇦',rate:10.0},
+  tunis:      {code:'TND',name:'Tunis Dinarı',    symbol:'DT', flag:'🇹🇳',rate:3.12},
+  nairobi:    {code:'KES',name:'Kenyа Şillinqi', symbol:'KSh',flag:'🇰🇪',rate:129},
+  mombasa:    {code:'KES',name:'Kenya Şillinqi',  symbol:'KSh',flag:'🇰🇪',rate:129},
+  havana:     {code:'CUP',name:'Kuba Pesosu',     symbol:'$',  flag:'🇨🇺',rate:24},
+  bogota:     {code:'COP',name:'Kolumbiya Pesosu',symbol:'$',  flag:'🇨🇴',rate:3900},
+  buenosaires:{code:'ARS',name:'Argentina Pesosu',symbol:'$',  flag:'🇦🇷',rate:850},
+  riodejaneiro:{code:'BRL',name:'Braziliya Rialı',symbol:'R$', flag:'🇧🇷',rate:4.97},
+  lima:       {code:'PEN',name:'Peru Solu',       symbol:'S/', flag:'🇵🇪',rate:3.72},
+  shanghai:   {code:'CNY',name:'Çin Yuanı',       symbol:'¥',  flag:'🇨🇳',rate:7.24},
+  beijing:    {code:'CNY',name:'Çin Yuanı',       symbol:'¥',  flag:'🇨🇳',rate:7.24},
+  taipei:     {code:'TWD',name:'Tayvan Dolları',  symbol:'NT$',flag:'🇹🇼',rate:31.5},
+  manila:     {code:'PHP',name:'Filippin Pesosu', symbol:'₱',  flag:'🇵🇭',rate:56.2},
+  kualalumpur:{code:'MYR',name:'Malay Ringgiti',  symbol:'RM', flag:'🇲🇾',rate:4.72},
+};
+
+const TREND_PHOTOS = {
+  dubai:      'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=400&q=80',
+  istanbul:   'https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?w=400&q=80',
+  santorini:  'https://images.unsplash.com/photo-1613395877344-13d4a8e0d49e?w=400&q=80',
+  bali:       'https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=400&q=80',
+  tokyo:      'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=400&q=80',
+  paris:      'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=400&q=80',
+  prague:     'https://images.unsplash.com/photo-1541849546-216549ae216d?w=400&q=80',
+  bangkok:    'https://images.unsplash.com/photo-1563492065599-3520f775eeed?w=400&q=80',
+  barcelona:  'https://images.unsplash.com/photo-1539037116277-4db20889f2d4?w=400&q=80',
+  rome:       'https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=400&q=80',
+  london:     'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=400&q=80',
+  newyork:    'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=400&q=80',
+  maldives:   'https://images.unsplash.com/photo-1573843981267-be1999ff37cd?w=400&q=80',
+  amsterdam:  'https://images.unsplash.com/photo-1576924542622-772281b13aa8?w=400&q=80',
+  vienna:     'https://images.unsplash.com/photo-1516550135131-fe3dcee55fc3?w=400&q=80',
+  budapest:   'https://images.unsplash.com/photo-1541343672885-9be56236302a?w=400&q=80',
+  singapore:  'https://images.unsplash.com/photo-1525625293386-3f8f99389edd?w=400&q=80',
+  antalya:    'https://images.unsplash.com/photo-1593778843329-22d95b3f6e12?w=400&q=80',
+  seoul:      'https://images.unsplash.com/photo-1549880338-65ddcdfd017b?w=400&q=80',
+  kyoto:      'https://images.unsplash.com/photo-1545569341-9eb8b30979d9?w=400&q=80',
+  osaka:      'https://images.unsplash.com/photo-1590559899731-a382839e5549?w=400&q=80',
+  marrakech:  'https://images.unsplash.com/photo-1539020140153-e479b8c22e70?w=400&q=80',
+  reykjavik:  'https://images.unsplash.com/photo-1531168481547-73740e0e2f98?w=400&q=80',
+  zurich:     'https://images.unsplash.com/photo-1515488764276-beab7607c1e6?w=400&q=80',
+  venice:     'https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?w=400&q=80',
+  florence:   'https://images.unsplash.com/photo-1551009175-8a68da93d5f9?w=400&q=80',
+  miami:      'https://images.unsplash.com/photo-1514214246283-d427a95c5d2f?w=400&q=80',
+  losangeles: 'https://images.unsplash.com/photo-1534190760961-74e8c1c5c3da?w=400&q=80',
+  dubai2:     'https://images.unsplash.com/photo-1512632578888-169bbbc64f33?w=400&q=80',
+  tbilisi:    'https://images.unsplash.com/photo-1565008576549-57569a49371d?w=400&q=80',
+  baku:       'https://images.unsplash.com/photo-1568877122832-b5553c0e2082?w=400&q=80',
+  doha:       'https://images.unsplash.com/photo-1577717903315-1691ae25ab3f?w=400&q=80',
+  capetown:   'https://images.unsplash.com/photo-1580060839134-75a5edca2e99?w=400&q=80',
+  dubrovnik:  'https://images.unsplash.com/photo-1555990793-da11153b2473?w=400&q=80',
+  shanghai:   'https://images.unsplash.com/photo-1548919973-5cef591cdbc9?w=400&q=80',
+  beijing:    'https://images.unsplash.com/photo-1508804185872-d7badad00f7d?w=400&q=80',
+  kualalumpur:'https://images.unsplash.com/photo-1596422846543-75c6fc197f07?w=400&q=80',
+  buenosaires:'https://images.unsplash.com/photo-1589909202802-8f4aadce1849?w=400&q=80',
+  riodejaneiro:'https://images.unsplash.com/photo-1483729558449-99ef09a8c325?w=400&q=80',
+  lisbon2:    'https://images.unsplash.com/photo-1555881400-74d7acaacd8b?w=400&q=80',
+  yerevan:    'https://images.unsplash.com/photo-1589656966895-2f33e7653819?w=400&q=80',
+  nairobi:    'https://images.unsplash.com/photo-1611348586804-61bf6c080437?w=400&q=80',
+  casablanca: 'https://images.unsplash.com/photo-1539020140153-e479b8c22e70?w=400&q=80',
+  tbilisi2:   'https://images.unsplash.com/photo-1565008576549-57569a49371d?w=400&q=80',
+  madrid:     'https://images.unsplash.com/photo-1539037116277-4db20889f2d4?w=400&q=80',
+  lisbon:     'https://images.unsplash.com/photo-1555881400-74d7acaacd8b?w=400&q=80',
+  athens:     'https://images.unsplash.com/photo-1555993539-1732b0258235?w=400&q=80',
+  phuket:     'https://images.unsplash.com/photo-1589394815804-964ed0be2eb5?w=400&q=80',
+  cancun:     'https://images.unsplash.com/photo-1552074284-5e88ef1aef18?w=400&q=80',
+  sydney:     'https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?w=400&q=80',
+  toronto:    'https://images.unsplash.com/photo-1517935706615-2717063c2225?w=400&q=80',
+  hurghada:   'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&q=80',
+  luxor:      'https://images.unsplash.com/photo-1568604210249-f1e98b74e5ce?w=400&q=80',
+  kahire:     'https://images.unsplash.com/photo-1539650116574-8efeb43e2750?w=400&q=80',
+  lasvegas:   'https://images.unsplash.com/photo-1605833556294-ea5c7a74f57d?w=400&q=80',
+  chicago:    'https://images.unsplash.com/photo-1494522855154-9297ac14b55f?w=400&q=80',
+  manila:     'https://images.unsplash.com/photo-1597149304980-6e41cdbf0b03?w=400&q=80',
+  jakarta:    'https://images.unsplash.com/photo-1555400038-63f5ba517a47?w=400&q=80',
+  hanoi:      'https://images.unsplash.com/photo-1557750255-c76072a7aad1?w=400&q=80',
+  hochiminh:  'https://images.unsplash.com/photo-1583417319070-4a69db38a482?w=400&q=80',
+  kathmandu:  'https://images.unsplash.com/photo-1544735716-392fe2489ffa?w=400&q=80',
+  muscat:     'https://images.unsplash.com/photo-1575861370604-48eded1e0bf7?w=400&q=80',
+  tashkent:   'https://images.unsplash.com/photo-1596422846543-75c6fc197f07?w=400&q=80',
+  samarkand:  'https://images.unsplash.com/photo-1565543053786-0b23bc6bf25f?w=400&q=80',
+  oslo:       'https://images.unsplash.com/photo-1554232456-8727aae0cfa4?w=400&q=80',
+  copenhagen: 'https://images.unsplash.com/photo-1513622470522-26c3c8a854bc?w=400&q=80',
+  stockholm:  'https://images.unsplash.com/photo-1509356843151-3e7d96241e11?w=400&q=80',
+  helsinki:   'https://images.unsplash.com/photo-1559598467-f8b76c8155d0?w=400&q=80',
+  warsaw:     'https://images.unsplash.com/photo-1519197924294-4ba991a11128?w=400&q=80',
+  krakow:     'https://images.unsplash.com/photo-1562973035-a1e9a9aaeffc?w=400&q=80',
+  split:      'https://images.unsplash.com/photo-1555993539-1732b0258235?w=400&q=80',
+  belgrade:   'https://images.unsplash.com/photo-1541849546-216549ae216d?w=400&q=80',
+  naples:     'https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=400&q=80',
+  beirut:     'https://images.unsplash.com/photo-1544735716-392fe2489ffa?w=400&q=80',
+  amman:      'https://images.unsplash.com/photo-1568604210249-f1e98b74e5ce?w=400&q=80',
+  tunis:      'https://images.unsplash.com/photo-1539020140153-e479b8c22e70?w=400&q=80',
+  mombasa:    'https://images.unsplash.com/photo-1611348586804-61bf6c080437?w=400&q=80',
+  bogota:     'https://images.unsplash.com/photo-1589409514187-c21d14df0d04?w=400&q=80',
+  lima:       'https://images.unsplash.com/photo-1526392060635-9d6019884377?w=400&q=80',
+  melbourne:  'https://images.unsplash.com/photo-1514395462725-fb4566210144?w=400&q=80',
+  auckland:   'https://images.unsplash.com/photo-1507699622108-4be3abd695ad?w=400&q=80',
+  taipei:     'https://images.unsplash.com/photo-1470004914212-05527e49370b?w=400&q=80',
+  colombo:    'https://images.unsplash.com/photo-1586861635167-e5223aadc9fe?w=400&q=80',
+  dubai3:     'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&q=80',
+};
+
+const CITY_IATA = {
+  dubai:'DXB', istanbul:'IST', kahire:'CAI', paris:'CDG', tokyo:'NRT',
+  bali:'DPS', rome:'FCO', barcelona:'BCN', newyork:'JFK', maldives:'MLE',
+  luxor:'LXR', singapore:'SIN', london:'LHR', amsterdam:'AMS', prague:'PRG',
+  vienna:'VIE', budapest:'BUD', santorini:'JTR', antalya:'AYT', bangkok:'BKK',
+  madrid:'MAD', lisbon:'LIS', athens:'ATH', florence:'FLR', venice:'VCE',
+  miami:'MIA', phuket:'HKT', cancun:'CUN', sydney:'SYD', toronto:'YYZ',
+  hurghada:'HRG', seoul:'ICN', kyoto:'KIX', osaka:'KIX', marrakech:'RAK',
+  reykjavik:'KEF', zurich:'ZRH', oslo:'OSL', copenhagen:'CPH', stockholm:'ARN',
+  helsinki:'HEL', warsaw:'WAW', krakow:'KRK', dubrovnik:'DBV', tbilisi:'TBS',
+  yerevan:'EVN', tashkent:'TAS', samarkand:'SKD', hanoi:'HAN', hochiminh:'SGN',
+  kathmandu:'KTM', muscat:'MCT', doha:'DOH', casablanca:'CMN', nairobi:'NBO',
+  losangeles:'LAX', chicago:'ORD', lasvegas:'LAS', buenosaires:'EZE',
+  riodejaneiro:'GIG', shanghai:'PVG', beijing:'PEK', kualalumpur:'KUL',
+  manila:'MNL', jakarta:'CGK', colombo:'CMB', baku:'GYD', tbilisi2:'BUS',
+  dubai2:'AUH', dubai3:'SSH', capetown:'CPT', belgrade:'BEG', split:'SPU',
+  lisbon2:'OPO', naples:'NAP', melbourne:'MEL', auckland:'AKL', taipei:'TPE',
+  bogota:'BOG', lima:'LIM', havana:'HAV', sanfrancisco:'SFO', losangeles2:'SFO',
+  mombasa:'MBA', tunis:'TUN', amman:'AMM', beirut:'BEY',
+};
+
+// =====================
+// STATE
+// =====================
+let curCity = null;
+let aiLoading = false;
+let chatHistory = [];
+let GROQ_KEY = '';
+let GEMINI_KEY = '';
+let ACTIVE_PROVIDER = 'demo';
+let OR_KEY   = '';  // OpenRouter (GPT-4o, Claude, Llama pulsuz)
+let OR_MODEL = 'meta-llama/llama-3.3-70b-instruct:free';
+let CP_KEY   = '';  // Copilot (Azure OpenAI)
+let CP_ENDPOINT = '';
+let LANG = 'az';
+let isDark = true;
+let recognition = null;
+let isRecording = false;
+
+// Extra aliases (needed globally)
+let GPT_KEY = '';
+let COPILOT_KEY = '';
+let COPILOT_ENDPOINT = '';
+
+// Load saved keys
+try {
+  GROQ_KEY    = localStorage.getItem('hg2_groq')    || '';
+  GEMINI_KEY  = localStorage.getItem('hg2_gemini')  || '';
+  OR_KEY      = localStorage.getItem('hg2_or')      || '';
+  OR_MODEL    = localStorage.getItem('hg2_or_model')|| 'meta-llama/llama-3.3-70b-instruct:free';
+  CP_KEY      = localStorage.getItem('hg2_cp')      || '';
+  CP_ENDPOINT = localStorage.getItem('hg2_cp_ep')   || '';
+  LANG        = localStorage.getItem('hg2_lang')    || 'az';
+  isDark      = localStorage.getItem('hg2_dark')    !== '0';
+} catch(e){}
+
+// No built-in key — user must add their own (free at console.groq.com)
+const BK = '';
+
+// Sync aliases
+COPILOT_KEY = CP_KEY;
+COPILOT_ENDPOINT = CP_ENDPOINT;
+
+// Set active provider priority: Gemini > OR > Groq > Copilot
+if(GEMINI_KEY) ACTIVE_PROVIDER = 'gemini';
+else if(OR_KEY) ACTIVE_PROVIDER = 'or';
+else if(GROQ_KEY) ACTIVE_PROVIDER = 'groq';
+else if(CP_KEY) ACTIVE_PROVIDER = 'copilot';
+
+// AI System Prompt
+const SYS = `Sən HaraGo AI — Azərbaycanın ən yaxşı AI səyahət köməkçisisən.
+
+Bakıda yaşayan, 50+ şəhər gəzmiş peşəkar məsləhətçi kimi danış.
+
+QAYDA:
+- Həmişə ${LANG === 'ru' ? 'rus' : LANG === 'en' ? 'ingilis' : LANG === 'tr' ? 'türk' : 'Azərbaycan'} dilində cavab ver
+- Konkret məlumat: AZN qiymətlər, real yer adları, linklər
+- Tarix/mədəniyyət sualı → geniş, maraqlı cavab (400-600 söz)
+- Praktik sual (büdcə, restoran) → qısa, strukturlu (150-300 söz)
+- Hər cavabda ən azı 1 faydalı link ver
+- 1 USD ≈ 1.70 AZN, 1 EUR ≈ 1.85 AZN
+
+UÇUŞ: Bakıdan (GYD) qiymətlər ver. Skyscanner, Aviasales linklər.
+OTEL: Real adlar + Booking.com link.
+TUR: Yalnız "tur/paket" soruşanda: Kontinent, Atlas, IzTour, Oxyjet, Silk Way.`;
+
+// =====================
+// AI CALL
+// =====================
+// Worker proxy URL (Cloudflare Worker)
+let HG_PROXY = '';
+try { HG_PROXY = localStorage.getItem('hg2_proxy') || ''; } catch(e) {}
+
+// XHR-based request — works on all Android/iOS/Desktop browsers
+function xhrRequest(url, method, headers, body) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open(method || 'POST', url, true);
+    xhr.timeout = 30000;
+    if(headers) Object.entries(headers).forEach(([k,v]) => xhr.setRequestHeader(k, v));
+    xhr.onload = function() {
+      resolve({
+        ok: xhr.status >= 200 && xhr.status < 300,
+        status: xhr.status,
+        json: () => Promise.resolve(JSON.parse(xhr.responseText))
+      });
+    };
+    xhr.onerror = () => reject(new Error('NETWORK_ERROR'));
+    xhr.ontimeout = () => reject(new Error('TIMEOUT'));
+    xhr.send(body || null);
+  });
+}
+
+async function apiFetch(url, opts) {
+  const headers = { ...(opts.headers || {}) };
+  const body = opts.body || null;
+  const method = opts.method || 'POST';
+
+  // Try XHR directly
+  try {
+    return await xhrRequest(url, method, headers, body);
+  } catch(e) {
+    if(e.message === 'TIMEOUT') throw e;
+    // Fallback: proxy
+    if(HG_PROXY) {
+      try {
+        return await xhrRequest(
+          HG_PROXY.replace(/\/$/, '') + '/proxy?url=' + encodeURIComponent(url),
+          method, headers, body
+        );
+      } catch(e2) { if(e2.message === 'TIMEOUT') throw e2; }
+    }
+    throw new Error('NETWORK_ERROR');
+  }
+}
+
+
+async function callAI(prompt, maxTok = 800) {
+  const msgs = [
+    ...chatHistory.slice(-6).map(m => ({ role: m.role, content: m.content.slice(0, 400) })),
+    { role: 'user', content: prompt }
+  ];
+
+  const langInstr = {
+    az:'Azərbaycan dilində cavab ver.', ru:'Отвечай на русском языке.',
+    en:'Respond in English.',           tr:'Türkçe yanıt ver.',
+    ar:'أجب باللغة العربية.',           de:'Antworte auf Deutsch.',
+    fr:'Réponds en français.'
+  }[LANG] || 'Azərbaycan dilində cavab ver.';
+
+  const sysPrompt = SYS + '\n' + langInstr;
+  let lastError = '';
+
+  // 0. Worker relay — key gizlidir, istifadəçi bilmir (ən etibarlı)
+  if(HG_PROXY){
+    try{
+      const res = await xhrRequest(HG_PROXY.replace(/\/$/, '') + '/ai', 'POST',
+        {'Content-Type':'application/json'},
+        JSON.stringify({ messages: msgs, maxTokens: maxTok, system: sysPrompt })
+      );
+      if(res.ok){
+        const d = await res.json();
+        if(d.reply){ ACTIVE_PROVIDER = 'relay:' + (d.provider||'?'); updateAIBadge(); return d.reply; }
+      }
+    }catch(e){ console.warn('Relay:', e.message); }
+  }
+
+  // Provider order: most reliable first
+  // Gemini → Groq → OR (OR free models rate limit quickly)
+  const tryOrder = [];
+  if(GEMINI_KEY)              tryOrder.push('gemini');
+  if(GROQ_KEY)                tryOrder.push('groq');
+  if(OR_KEY)                  tryOrder.push('or');
+  if(CP_KEY && CP_ENDPOINT)   tryOrder.push('copilot');
+
+  // If user explicitly chose OR as active, put it first (but keep others as fallback)
+  if(ACTIVE_PROVIDER === 'or' && OR_KEY){
+    tryOrder.splice(tryOrder.indexOf('or'), 1);
+    tryOrder.unshift('or');
+  }
+
+  for(const provider of tryOrder){
+    try{
+      let txt = '';
+
+      if(provider === 'gemini'){
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`;
+        const contents = msgs.map(m=>({role:m.role==='user'?'user':'model',parts:[{text:m.content}]}));
+        const res = await apiFetch(url, {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({
+            system_instruction:{parts:[{text:sysPrompt}]}, contents,
+            generationConfig:{maxOutputTokens:maxTok,temperature:0.9}
+          })
+        });
+        const d = await res.json();
+        if(!res.ok){ lastError=`Gemini ${res.status}: ${d?.error?.message||''}`; continue; }
+        txt = d?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      }
+
+      else if(provider === 'or'){
+        // OpenRouter — try multiple free models if one hits rate limit
+        // Only confirmed working models (May 2026)
+        const ALL_FREE = [
+          'meta-llama/llama-3.3-70b-instruct:free',
+          'meta-llama/llama-3.1-8b-instruct:free',
+          'google/gemma-3-27b-it:free',
+          'mistralai/mistral-7b-instruct:free',
+          'qwen/qwen-2.5-72b-instruct:free',
+        ];
+        // Skip models that returned 404 this session
+        if(!window._orFailed) window._orFailed = new Set();
+        // Put user-selected model first if not failed
+        const userModel = OR_MODEL && !window._orFailed.has(OR_MODEL) ? [OR_MODEL] : [];
+        const FREE_MODELS_FINAL = [
+          ...userModel,
+          ...ALL_FREE.filter(m => m !== OR_MODEL && !window._orFailed.has(m))
+        ];
+        // Remove duplicates
+        const modelsToTry = FREE_MODELS_FINAL;
+        
+        for(const model of modelsToTry){
+          try{
+            const res = await apiFetch('https://openrouter.ai/api/v1/chat/completions', {
+              method:'POST',
+              headers:{
+                'Content-Type':'application/json',
+                'Authorization':`Bearer ${OR_KEY}`,
+                'HTTP-Referer': typeof location!=='undefined'?location.href:'https://harago.ai',
+                'X-Title':'HaraGo AI'
+              },
+              body: JSON.stringify({
+                model,
+                messages:[{role:'system',content:sysPrompt},...msgs],
+                max_tokens:maxTok, temperature:0.85
+              })
+            });
+            const d = await res.json();
+            if(res.status === 429){ lastError=`OR 429: ${model} limit`; continue; }
+            if(res.status === 404){ window._orFailed = window._orFailed||new Set(); window._orFailed.add(model); lastError=`OR 404: ${model}`; continue; }
+            if(!res.ok){ lastError=`OR ${res.status}: ${d?.error?.message||''}`; continue; }
+            txt = d?.choices?.[0]?.message?.content || '';
+            if(txt){ OR_MODEL = model; break; } // save working model
+          }catch(e){ lastError=`OR fetch: ${e.message}`; }
+        }
+      }
+
+      else if(provider === 'groq'){
+        const res = await apiFetch('https://api.groq.com/openai/v1/chat/completions', {
+          method:'POST',
+          headers:{'Content-Type':'application/json','Authorization':`Bearer ${GROQ_KEY}`},
+          body: JSON.stringify({
+            model:'llama-3.3-70b-versatile',
+            messages:[{role:'system',content:sysPrompt},...msgs],
+            max_tokens:maxTok, temperature:0.85
+          })
+        });
+        const d = await res.json();
+        if(!res.ok){ lastError=`Groq ${res.status}: ${d?.error?.message||''}`; continue; }
+        txt = d?.choices?.[0]?.message?.content || '';
+      }
+
+      else if(provider === 'copilot'){
+        const epBase = CP_ENDPOINT.replace(/\/$/,'');
+        const dep = epBase.includes('deployments') ? '' : '/openai/deployments/gpt-4o';
+        const url = `${epBase}${dep}/chat/completions?api-version=2024-02-01`;
+        const res = await apiFetch(url, {
+          method:'POST',
+          headers:{'Content-Type':'application/json','api-key':CP_KEY},
+          body: JSON.stringify({
+            messages:[{role:'system',content:sysPrompt},...msgs],
+            max_tokens:maxTok, temperature:0.85
+          })
+        });
+        const d = await res.json();
+        if(!res.ok){ lastError=`Copilot ${res.status}: ${d?.error?.message||''}`; continue; }
+        txt = d?.choices?.[0]?.message?.content || '';
+      }
+
+      if(txt){
+        ACTIVE_PROVIDER = provider;
+        updateAIBadge();
+        return txt;
+      }
+    } catch(e){
+      lastError = `${provider}: ${e.message}`;
+      console.warn(provider, e.message);
+    }
+  }
+
+  // Bütün AI-lar xəta verdi — demo cavab qaytar
+  return getDemoReply(msgs[msgs.length-1]?.content || '', lastError);
+}
+
+function getDemoReply(question, errorInfo) {
+  const q = (question || '').toLowerCase();
+  const city = window._curCityName || '';
+  const enc = s => encodeURIComponent(s);
+
+  if(/plan|gün|trip|tur|itinerary/i.test(q)){
+    return `## 🗺️ ${city||'Şəhər'} — Nümunə Plan\n\n**Gün 1: Kəşf**\n• 🌅 Səhər: Tarixi mərkəz, əsas meydanlar\n• ☀️ Günorta: Yerli restoran (~15-25 AZN)\n• 🌆 Axşam: Panoramik baxış nöqtəsi\n\n**Gün 2: Mədəniyyət**\n• 🏛️ Muzeylər, tarixi abidələr\n• 🛍️ Yerli bazar\n• 🌃 Şəhər gecə həyatı\n\n**Gün 3: Macəra**\n• 🚌 Şəhər ətrafı ekskursiya\n• 📸 Foto məkanlar\n\n---\n💡 **Tam AI planı üçün Groq açarı lazımdır:**\n⚙️ → [console.groq.com](https://console.groq.com) → pulsuz, 30 saniyə`;
+  }
+  if(/restoran|yemək|food|kafe|eat/i.test(q)){
+    return `## 🍽️ ${city||'Şəhər'}-da Yemək\n\n• Yerli bazarlar — ən ucuz və dadlı\n• Turist zonasından kənardakı restoranlar daha yaxşı\n• Orta qiymət: ~20-40 AZN/nəfər\n\n[TripAdvisor-da axtar](https://www.tripadvisor.com/Search?q=${enc(city+' restaurant')})\n\n💡 Konkret tövsiyə üçün: ⚙️ → Groq açarı əlavə et`;
+  }
+  if(/büdcə|pul|nə qədər|cost|xərc/i.test(q)){
+    return `## 💰 Büdcə Rəhbəri\n\n| | Ekonom | Orta | Lüks |\n|---|---|---|---|\n| Uçuş g-g | ~150₼ | ~350₼ | ~600₼+ |\n| Otel/gecə | ~40₼ | ~100₼ | ~200₼+ |\n| Yemək/gün | ~25₼ | ~50₼ | ~100₼+ |\n\n💡 Dəqiq hesab üçün: ⚙️ → Groq açarı əlavə et (pulsuz)`;
+  }
+  if(/viza|visa|pasport/i.test(q)){
+    return `## 🛂 Azərbaycan Pasportu ilə Vizasız\n\n🇹🇷 Türkiyə • 🇬🇪 Gürcüstan • 🇷🇸 Serbiya • 🇺🇦 Ukrayna\n🇲🇩 Moldova • 🇰🇿 Qazaxıstan • 🇧🇾 Belarus • 🇰🇬 Qırğızıstan\n\n[IATA Travel Centre](https://www.iatatravelcentre.com) — tam siyahı\n\n💡 Konkret ölkə üçün: ⚙️ → Groq açarı əlavə et`;
+  }
+
+  return `## ⚠️ AI Limiti Doldu\n\nSualınız: _"${question.slice(0,60)}${question.length>60?'...':''}"_\n\nBütün pulsuz AI-lar bu an həddini aşdı.\n\n**Həll — Groq açarı al (30 saniyə, pulsuz):**\n1. [console.groq.com](https://console.groq.com) → Google ilə giriş\n2. **API Keys** → **Create API Key** → kopyala\n3. ⚙️ Ayarlar → Groq → yapışdır → **Aktiv Et**\n\nGroq: gündə **14,400 pulsuz sorğu** — heç vaxt bitmir.`;
+}
+
+
+// =====================
+// MARKDOWN RENDER
+// =====================
+function md(text) {
+  return text
+    .replace(/^#{1,3}\s+(.+)/gm, '<strong>$1</strong>')
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g, '<a href="$2" target="_blank">$1</a>')
+    .replace(/^[-•]\s+(.+)/gm, '• $1')
+    .replace(/^(\d+\.\s+.+)/gm, '$1')
+    .replace(/---/g, '<hr>')
+    .replace(/\n{2,}/g, '<br><br>')
+    .replace(/\n/g, '<br>');
+}
+
+// =====================
+// CHAT UI
+// =====================
+function addUserMsg(text) {
+  const msgs = document.getElementById('aiMessages');
+  const div = document.createElement('div');
+  div.className = 'msg msg-user';
+  div.textContent = text;
+  msgs.appendChild(div);
+  scrollMsgs();
+}
+
+function addAIMsg(text) {
+  const msgs = document.getElementById('aiMessages');
+  const div = document.createElement('div');
+  div.className = 'msg msg-ai';
+  div.innerHTML = md(text);
+
+  // Add route map if places detected
+  const route = buildRouteCard(text);
+  if (route) div.appendChild(route);
+
+  msgs.appendChild(div);
+  scrollMsgs();
+}
+
+function showTyping() {
+  const msgs = document.getElementById('aiMessages');
+  const t = document.createElement('div');
+  t.className = 'typing';
+  t.id = 'typingInd';
+  t.innerHTML = '<span></span><span></span><span></span>';
+  msgs.appendChild(t);
+  scrollMsgs();
+}
+
+function hideTyping() {
+  document.getElementById('typingInd')?.remove();
+}
+
+function scrollMsgs() {
+  const el = document.getElementById('aiMessages');
+  setTimeout(() => el.scrollTop = el.scrollHeight, 50);
+}
+
+function clearChat() {
+  chatHistory = [];
+  document.getElementById('aiMessages').innerHTML = '';
+  showWelcome();
+}
+
+function showWelcome() {
+  const msgs = document.getElementById('aiMessages');
+  if (msgs.children.length > 0) return;
+  const div = document.createElement('div');
+  div.className = 'msg msg-ai';
+  const hasKey = !!(GROQ_KEY || GEMINI_KEY || OR_KEY || CP_KEY);
+  if(hasKey){
+    div.innerHTML = `<strong>Salam! Mən HaraGo AI-yəm 🌍</strong><br><br>
+Səyahət planı, şəhər haqqında məlumat, restoran, otel, viza — hər şeyi soruşa bilərsən!
+<div class="ai-quick" style="margin-top:10px">
+  <div class="ai-q" onclick="askAI('Bu ay ucuz hara gedə bilərəm?')">💰 Ucuz tur</div>
+  <div class="ai-q" onclick="askAI('Bakıdan vizasız ölkələr hansılardır?')">🛂 Vizasız</div>
+  <div class="ai-q" onclick="askAI('3 günlük romantik tur harada?')">💑 Romantik</div>
+  <div class="ai-q" onclick="askAI('Uşaqlı ailə üçün ən yaxşı tur?')">👨‍👩‍👧 Ailə</div>
+  <div class="ai-q" onclick="runNetworkTest()">🔧 Bağlantı test et</div>
+</div>`;
+  } else {
+    div.innerHTML = `<strong>👋 HaraGo AI-a Xoş Gəldin!</strong><br><br>
+AI aktivləşdirmək üçün pulsuz açar lazımdır:<br><br>
+<strong>⚡ Ən asan (Groq — 30 saniyə):</strong><br>
+1. <a href="https://console.groq.com" target="_blank">console.groq.com</a> → Google ilə giriş<br>
+2. API Keys → Create Key → kopyala<br>
+3. ⚙️ Ayarlar → Groq → yapışdır<br><br>
+<strong>🔵 Alternativ (Gemini):</strong><br>
+<a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a> → Get API key<br><br>
+<div class="ai-quick" style="margin-top:8px">
+  <div class="ai-q" onclick="openSettings()">⚙️ Açar əlavə et</div>
+  <div class="ai-q" onclick="window.open('https://console.groq.com','_blank')">⚡ Groq açarı al</div>
+  <div class="ai-q" onclick="window.open('https://aistudio.google.com/apikey','_blank')">🔵 Gemini açarı al</div>
+</div>`;
+  }
+  msgs.appendChild(div);
+}
+
+async function sendMsg() {
+  const inp = document.getElementById('aiInput');
+  const text = inp.value.trim();
+  if (!text || aiLoading) return;
+
+  inp.value = '';
+  inp.style.height = 'auto';
+  addUserMsg(text);
+  chatHistory.push({ role: 'user', content: text });
+
+  aiLoading = true;
+  document.getElementById('sendBtn').disabled = true;
+  showTyping();
+
+  const ctx = curCity && CITIES[curCity]
+    ? `[Şəhər: ${CITIES[curCity].flag} ${CITIES[curCity].name}] ${text}`
+    : text;
+
+  try {
+    const reply = await callAI(ctx, 1200);
+    hideTyping();
+    addAIMsg(reply);
+    chatHistory.push({ role: 'assistant', content: reply });
+    if (chatHistory.length > 16) chatHistory = chatHistory.slice(-16);
+    updateAIBadge();
+  } catch(e) {
+    hideTyping();
+    // callAI now returns demo reply instead of throwing — this catch is last resort
+    addAIMsg(`**⚠️ Texniki xəta**\n\n_${e.message||'Bilinməyən'}_\n\nHəll: ⚙️ → [console.groq.com](https://console.groq.com) → pulsuz Groq açarı`);
+    chatHistory.pop();
+  }
+
+  aiLoading = false;
+  document.getElementById('sendBtn').disabled = false;
+}
+
+function askAI(q) {
+  openAI();
+  setTimeout(() => {
+    const inp = document.getElementById('aiInput');
+    inp.value = q;
+    sendMsg();
+  }, 200);
+}
+
+// =====================
+// ROUTE MAP CARD
+// =====================
+function buildRouteCard(text) {
+  const isRoute = /nə görməli|görməli yerlər|gəzin|plan|gün|marşrut|itinerary/i.test(text);
+  if (!isRoute) return null;
+
+  const places = [];
+  const boldRx = /\*\*([^*\n]{4,45})\*\*/g;
+  let m;
+  while ((m = boldRx.exec(text)) !== null) {
+    const n = m[1].trim();
+    if (!/AZN|USD|EUR|₼|\d+|gün|büdcə|qiymət/i.test(n)) places.push(n);
+  }
+  if (places.length < 2) return null;
+
+  const city = curCity ? CITIES[curCity]?.name || '' : '';
+  const pts = places.slice(0, 6);
+  const mapsUrl = `https://www.google.com/maps/dir/${pts.map(p => encodeURIComponent(p + (city ? `, ${city}` : ''))).join('/')}`;
+
+  const card = document.createElement('div');
+  card.className = 'route-card';
+  card.innerHTML = `
+    <div class="route-card-header">
+      <div class="route-card-title">🗺️ Marşrut — ${pts.length} dayanacaq</div>
+      <a href="${mapsUrl}" target="_blank" class="route-open-btn">Xəritədə aç →</a>
+    </div>
+    <div class="route-stops">
+      ${pts.map((p, i) => `
+        <div class="route-stop">
+          <div class="route-dot" style="background:${i===0?'var(--accent)':i===pts.length-1?'var(--accent2)':'var(--surface2)'}"></div>
+          <a href="https://www.google.com/maps/search/${encodeURIComponent(p+(city?`, ${city}`:''))}" target="_blank" class="route-stop-name">${i===0?'🚀 ':i===pts.length-1?'🏁 ':''}${p}</a>
+          <div class="route-stop-num">${i+1}</div>
+        </div>`).join('')}
+    </div>`;
+  return card;
+}
+
+// =====================
+// SCREENS
+// =====================
+function goHome() {
+  setScreen('homeScreen');
+  setNavActive('navHome');
+  curCity = null;
+}
+
+function openAI() {
+  setScreen('aiScreen');
+  setNavActive('navAI');
+  showWelcome();
+  setTimeout(() => document.getElementById('aiInput')?.focus(), 300);
+}
+
+function openNearby() {
+  setScreen('nearbyScreen');
+  setNavActive('navNearby');
+  loadNearby();
+}
+
+function setScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => {
+    const isCity = s.id === 'cityScreen';
+    if (s.id === id) {
+      s.classList.remove('hidden', 'slide-up');
+    } else {
+      s.classList.add(isCity ? 'slide-up' : 'hidden');
+    }
+  });
+}
+
+function setNavActive(id) {
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(id)?.classList.add('active');
+}
+
+// =====================
+// ✨ KILLER FLOW
+// =====================
+function setKillerPrompt(txt){
+  const el = document.getElementById('killerText');
+  if(el){ el.value = txt; el.style.height='auto'; el.style.height=el.scrollHeight+'px'; }
+}
+
+async function runKillerFlow(){
+  const txt = (document.getElementById('killerText')?.value || '').trim();
+  if(!txt){ showToast('✍️ Sual yazın — məs: 500 AZN, 3 gün, dəniz'); return; }
+
+  // Open AI screen and run
+  openAI();
+  setTimeout(async ()=>{
+    const inp = document.getElementById('aiInput');
+    if(inp) inp.value = '';
+
+    const prompt = `İstifadəçi: "${txt}"
+
+Bunun əsasında:
+1. **Ən uyğun 2-3 şəhər** tövsiyə et (Bakıdan gedilir, AZN ilə büdcə nəzərə al)
+2. **Ən yaxşı seçim** üçün **3 günlük tam plan** hazırla:
+   - Gün-gün (səhər/günorta/axşam)
+   - Real restoran adları + ~qiymət AZN
+   - Görməli yerlər + giriş haqqı
+   - Otel tövsiyəsi + ~qiymət/gecə
+3. **Ümumi büdcə cədvəli** (uçuş+otel+yemək+aktivlik)
+4. **Bilet linklər**: Aviasales, Skyscanner, Booking.com
+
+Azərbaycan dilində, AZN ilə, konkret yaz!`;
+
+    addUserMsg(`✨ ${txt}`);
+    chatHistory.push({ role:'user', content: prompt });
+    aiLoading = true;
+    document.getElementById('sendBtn').disabled = true;
+    showTyping();
+
+    try{
+      const reply = await callAI(prompt, 1600);
+      hideTyping();
+      addAIMsg(reply);
+      chatHistory.push({ role:'assistant', content: reply });
+
+      // Auto-show save button
+      showSavePlanBtn(txt, reply);
+      if(typeof addPoints==='function') addPoints(20,'Killer flow');
+    }catch(e){
+      hideTyping();
+      addAIMsg(getDemoReply(txt, e.message));
+    }
+    aiLoading = false;
+    document.getElementById('sendBtn').disabled = false;
+  }, 300);
+}
+
+function showSavePlanBtn(query, plan){
+  const msgs = document.getElementById('aiMessages');
+  const div = document.createElement('div');
+  div.style.cssText = 'display:flex;gap:8px;padding:4px 0';
+  div.innerHTML = `
+    <button onclick="saveTrip('${query.replace(/'/g,"\\'")}', this)" style="flex:1;background:linear-gradient(135deg,var(--green),#059669);border:none;border-radius:12px;padding:11px;color:white;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;cursor:pointer">
+      💾 Planı Saxla
+    </button>
+    <button onclick="sharePlan('${query.replace(/'/g,"\\'")}','${plan.slice(0,100).replace(/'/g,"\\'")}...')" style="flex:1;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:11px;color:var(--text);font-family:'Syne',sans-serif;font-weight:700;font-size:13px;cursor:pointer">
+      📤 Paylaş
+    </button>`;
+  msgs.appendChild(div);
+  scrollMsgs();
+}
+
+// =====================
+// 💾 SAVED TRIPS
+// =====================
+let savedTrips = [];
+try{ savedTrips = JSON.parse(localStorage.getItem('hg2_trips')||'[]'); }catch(e){}
+
+function saveTrip(query, btn){
+  const msgs = document.getElementById('aiMessages');
+  const allMsgs = [...msgs.querySelectorAll('.msg-ai')];
+  const lastAI = allMsgs[allMsgs.length-2]?.innerText || '';
+
+  const trip = {
+    id: Date.now(),
+    query,
+    plan: lastAI.slice(0,1000),
+    city: window._curCityName || '',
+    date: new Date().toLocaleDateString('az-Latn-AZ',{day:'numeric',month:'short',year:'numeric'}),
+    preview: lastAI.slice(0,120) + '...'
+  };
+
+  savedTrips.unshift(trip);
+  if(savedTrips.length > 20) savedTrips = savedTrips.slice(0,20);
+  localStorage.setItem('hg2_trips', JSON.stringify(savedTrips));
+
+  if(btn){ btn.textContent = '✅ Saxlandı'; btn.disabled = true; btn.style.opacity='0.7'; }
+  showToast('💾 Plan saxlandı!');
+}
+
+function sharePlan(query, preview){
+  const msg = encodeURIComponent(`✈️ HaraGo AI planım:\n\n"${query}"\n\n${preview}\n\nHaraGo AI ilə: ${location.href}`);
+  if(navigator.share){
+    navigator.share({ title:'HaraGo AI Plan', text: `${query}\n\n${preview}`, url: location.href });
+  } else {
+    window.open(`https://wa.me/?text=${msg}`, '_blank');
+  }
+}
+
+function openSavedTrips(){
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.7);backdrop-filter:blur(10px);display:flex;align-items:flex-end;justify-content:center';
+  overlay.onclick = e => { if(e.target===overlay) overlay.remove(); };
+
+  const sheet = document.createElement('div');
+  sheet.style.cssText = 'background:var(--bg);border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:0 0 40px;max-height:85vh;overflow-y:auto';
+
+  if(!savedTrips.length){
+    sheet.innerHTML = `
+      <div style="width:36px;height:4px;background:var(--border);border-radius:2px;margin:12px auto"></div>
+      <div style="padding:16px;text-align:center">
+        <div style="font-size:48px;margin-bottom:12px">💾</div>
+        <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--text);margin-bottom:8px">Saxlanmış Plan Yoxdur</div>
+        <div style="font-size:13px;color:var(--text2)">Plan hazırladıqdan sonra "Saxla" düyməsinə bas</div>
+      </div>`;
+  } else {
+    sheet.innerHTML = `
+      <div style="width:36px;height:4px;background:var(--border);border-radius:2px;margin:12px auto"></div>
+      <div style="padding:0 16px 12px;font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--text)">💾 Saxlanmış Planlar (${savedTrips.length})</div>
+      ${savedTrips.map(t=>`
+        <div style="margin:0 16px 10px;background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden">
+          <div style="padding:12px 14px">
+            <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px">${t.query}</div>
+            <div style="font-size:11px;color:var(--text2);margin-bottom:8px">${t.date}</div>
+            <div style="font-size:12px;color:var(--text2);line-height:1.5">${t.preview}</div>
+          </div>
+          <div style="display:flex;border-top:1px solid var(--border)">
+            <div onclick="loadSavedTrip('${t.id}');this.closest('[style*=fixed]').remove()" style="flex:1;padding:10px;text-align:center;font-size:12px;font-weight:700;color:var(--accent);cursor:pointer">Aç</div>
+            <div style="width:1px;background:var(--border)"></div>
+            <div onclick="deleteSavedTrip('${t.id}');this.closest('[style*=border-radius]').remove()" style="flex:1;padding:10px;text-align:center;font-size:12px;font-weight:700;color:var(--red);cursor:pointer">Sil</div>
+          </div>
+        </div>`).join('')}`;
+  }
+
+  overlay.appendChild(sheet);
+  document.body.appendChild(overlay);
+}
+
+function loadSavedTrip(id){
+  const trip = savedTrips.find(t=>t.id==id);
+  if(!trip) return;
+  openAI();
+  setTimeout(()=>{
+    addUserMsg(`💾 Saxlanmış plan: "${trip.query}"`);
+    addAIMsg(trip.plan);
+  }, 300);
+}
+
+function deleteSavedTrip(id){
+  savedTrips = savedTrips.filter(t=>t.id!=id);
+  localStorage.setItem('hg2_trips', JSON.stringify(savedTrips));
+  showToast('🗑️ Plan silindi');
+}
+
+
+function openCity(key) {
+  curCity = key;
+  const ci = CITIES[key];
+  if (!ci) return;
+
+  chatHistory = [];
+
+  // Banner
+  const photo = TREND_PHOTOS[key] || '';
+  const img = document.getElementById('cityBannerImg');
+  img.src = photo;
+  img.style.display = photo ? 'block' : 'none';
+
+  document.getElementById('cityFlag').textContent = ci.flag || '';
+  document.getElementById('cityName').textContent = ci.name || key;
+  document.getElementById('cityTagline').textContent = ci.tagline || '';
+
+  // Quick questions
+  const qs = ci.quickQ || [`${ci.name}-da nə görməli?`, `${ci.name} büdcəsi?`, `${ci.name} 3 gün plan`, `${ci.name} tarixi`];
+  document.getElementById('cityQuickQ').innerHTML = qs.slice(0, 5).map(q =>
+    `<div class="ai-q" onclick="askAboutCity('${q.replace(/'/g,"\\'")}','custom')">${q}</div>`
+  ).join('');
+
+  // Currency
+  loadCityCurrency(key);
+
+  // Book links
+  const iata = CITY_IATA[key] || '';
+  const depDate = new Date(Date.now() + 14 * 86400e3).toISOString().split('T')[0];
+  const retDate = new Date(Date.now() + 21 * 86400e3).toISOString().split('T')[0];
+  const bookingUrl = `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(ci.name)}&checkin=${depDate}&checkout=${retDate}&group_adults=2`;
+  const skyUrl = iata ? `https://www.skyscanner.net/transport/flights/gyd/${iata.toLowerCase()}/${depDate.replace(/-/g,'').slice(2)}/${retDate.replace(/-/g,'').slice(2)}/?adults=1` : `https://www.skyscanner.net`;
+  const aviaUrl = iata ? `https://www.aviasales.ru/search/GYD${depDate.replace(/-/g,'').slice(2)}${iata}1` : 'https://www.aviasales.ru';
+
+  document.getElementById('cityBookLinks').innerHTML = `
+    <a href="${bookingUrl}" target="_blank" class="book-link" style="background:linear-gradient(135deg,#003580,#0057B8)">
+      <span class="book-link-icon">🏨</span>
+      <div class="book-link-info"><div class="book-link-name">Booking.com</div><div class="book-link-desc">${ci.name} — otel axtar</div></div>
+      <span class="book-link-arrow">→</span>
+    </a>
+    <a href="${skyUrl}" target="_blank" class="book-link" style="background:linear-gradient(135deg,#0770E3,#00AEEF)">
+      <span class="book-link-icon">🔍</span>
+      <div class="book-link-info"><div class="book-link-name">Skyscanner</div><div class="book-link-desc">GYD → ${iata||ci.name} — bilet</div></div>
+      <span class="book-link-arrow">→</span>
+    </a>
+    <a href="${aviaUrl}" target="_blank" class="book-link" style="background:linear-gradient(135deg,#FF6D00,#FF4500)">
+      <span class="book-link-icon">✈️</span>
+      <div class="book-link-info"><div class="book-link-name">Aviasales</div><div class="book-link-desc">Ucuz bilet müqayisəsi</div></div>
+      <span class="book-link-arrow">→</span>
+    </a>`;
+
+  // Load weather
+  loadCityWeather(key);
+
+  // Show screen
+  const screen = document.getElementById('cityScreen');
+  screen.classList.remove('slide-up');
+  screen.style.zIndex = '20';
+  setNavActive('');
+}
+
+function closeCityScreen() {
+  const screen = document.getElementById('cityScreen');
+  screen.classList.add('slide-up');
+  setTimeout(() => screen.style.zIndex = '', 320);
+  setNavActive('navHome');
+}
+
+function askAboutCity(type, mode) {
+  const ci = CITIES[curCity];
+  if (!ci) return;
+  let prompt = '';
+  if (mode === 'custom') {
+    prompt = type;
+  } else if (type === 'plan') {
+    prompt = `${ci.name}-a 3 günlük tam plan hazırla. AZN ilə büdcə, real yer adları, restoran tövsiyəsi.`;
+  } else if (type === 'görməli') {
+    prompt = `${ci.name}-da mütləq görülməli 7 yer. Hər yer üçün: giriş qiyməti, açılış saatı, niyə getməli.`;
+  } else if (type === 'restoran') {
+    prompt = `${ci.name}-da ən yaxşı restoranlar. Real adlar, yeməklər, orta çek AZN ilə.`;
+  }
+  openAI();
+  setTimeout(() => {
+    const inp = document.getElementById('aiInput');
+    inp.value = prompt;
+    sendMsg();
+  }, 200);
+}
+
+function openCityMap() {
+  const ci = CITIES[curCity];
+  if (ci) window.open(`https://www.google.com/maps/search/${encodeURIComponent(ci.name + ' top attractions')}`, '_blank');
+}
+function openCityBooking() {
+  const ci = CITIES[curCity];
+  if (ci) window.open(`https://www.booking.com/searchresults.html?ss=${encodeURIComponent(ci.name)}`, '_blank');
+}
+function openCityTickets() {
+  const ci = CITIES[curCity];
+  const iata = CITY_IATA[curCity] || '';
+  const dep = new Date(Date.now()+14*86400e3).toISOString().split('T')[0].replace(/-/g,'').slice(2);
+  if (iata) window.open(`https://www.aviasales.ru/search/GYD${dep}${iata}1`, '_blank');
+  else if (ci) window.open(`https://www.skyscanner.net`, '_blank');
+}
+
+// =====================
+// WEATHER & CURRENCY
+// =====================
+async function loadCityWeather(key) {
+  const w = CITY_WEATHER[key];
+  if (!w) return;
+  try {
+    const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${w.lat}&longitude=${w.lon}&current_weather=true&temperature_unit=celsius`);
+    const d = await res.json();
+    const t = d?.current_weather?.temperature;
+    const wc = d?.current_weather?.weathercode;
+    const icons = {0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',51:'🌦️',61:'🌧️',71:'❄️',95:'⛈️'};
+    const icon = icons[wc] || '🌡️';
+    const badge = document.getElementById('cityWeatherBadge');
+    if (badge && t !== undefined) {
+      badge.textContent = `${icon} ${Math.round(t)}°`;
+      badge.style.display = 'block';
+    }
+  } catch(e) {}
+}
+
+async function loadCityCurrency(key) {
+  const cur = CITY_CURRENCY[key];
+  const card = document.getElementById('currencyCard');
+  if (!cur || !card) return;
+  card.innerHTML = `
+    <div class="currency-left">
+      <div class="currency-flag">${cur.flag}</div>
+      <div>
+        <div class="currency-name">${cur.name}</div>
+        <div class="currency-code">${cur.code}</div>
+      </div>
+    </div>
+    <div>
+      <div class="currency-rate" id="curRate">1 ₼ = … ${cur.code}</div>
+      <div class="currency-sub">AZN kursuna görə</div>
+    </div>`;
+  // Live rate
+  try {
+    const r = await fetch(`https://api.frankfurter.app/latest?from=AZN&to=${cur.code}`);
+    const d = await r.json();
+    const rate = d?.rates?.[cur.code];
+    if (rate) {
+      document.getElementById('curRate').textContent = `1 ₼ = ${rate.toFixed(2)} ${cur.code}`;
+    }
+  } catch(e) {
+    if (cur.rate) {
+      const approx = (1 / cur.rate).toFixed(3);
+      document.getElementById('curRate').textContent = `1 ₼ ≈ ${approx} ${cur.code}`;
+    }
+  }
+}
+
+// =====================
+// SEARCH
+// =====================
+function openSearch() {
+  const overlay = document.getElementById('searchOverlay');
+  overlay.classList.add('open');
+  setTimeout(() => document.getElementById('searchInput')?.focus(), 200);
+}
+
+function closeSearch() {
+  document.getElementById('searchOverlay').classList.remove('open');
+  document.getElementById('searchInput').value = '';
+  document.getElementById('searchResults').innerHTML = '';
+}
+
+function doSearch(q) {
+  const res = document.getElementById('searchResults');
+  if (!q.trim()) { res.innerHTML = ''; return; }
+  const ql = q.toLowerCase().trim();
+
+  // Check CM map
+  const mapped = CM[ql];
+  const directKey = mapped || Object.keys(CITIES).find(k =>
+    (CITIES[k].name || '').toLowerCase().includes(ql) || k.includes(ql)
+  );
+
+  if (directKey && CITIES[directKey]) {
+    const ci = CITIES[directKey];
+    res.innerHTML = `<div class="search-item" onclick="selectCity('${directKey}')">
+      <div class="search-flag">${ci.flag}</div>
+      <div><div class="search-item-name">${ci.name}</div><div class="search-item-sub">${ci.tagline || ''}</div></div>
+    </div>`;
+    return;
+  }
+
+  // Fuzzy search
+  const results = Object.entries(CITIES).filter(([k, v]) =>
+    (v.name || '').toLowerCase().includes(ql) ||
+    k.toLowerCase().includes(ql)
+  ).slice(0, 8);
+
+  if (!results.length) {
+    res.innerHTML = `<div style="text-align:center;padding:30px;color:var(--text2);font-size:14px">😔 "${q}" tapılmadı</div>`;
+    return;
+  }
+
+  res.innerHTML = results.map(([k, v]) => `
+    <div class="search-item" onclick="selectCity('${k}')">
+      <div class="search-flag">${v.flag}</div>
+      <div>
+        <div class="search-item-name">${v.name}</div>
+        <div class="search-item-sub">${v.tagline || ''}</div>
+      </div>
+    </div>`).join('');
+}
+
+function selectCity(key) {
+  closeSearch();
+  openCity(key);
+}
+
+// =====================
+// NEARBY
+// =====================
+async function loadNearby() {
+  const list = document.getElementById('nearbyList');
+  list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text2);font-size:14px">📍 Yeri müəyyən edir...</div>';
+
+  if (!navigator.geolocation) { showNearbyFallback(); return; }
+
+  navigator.geolocation.getCurrentPosition(async pos => {
+    const { latitude: lat, longitude: lon } = pos.coords;
+    window._userLat = lat; window._userLon = lon;
+    checkLocationForNotification(lat, lon);
+
+    const withDist = Object.entries(CITY_WEATHER).map(([key, w]) => {
+      const dlat = w.lat - lat, dlon = w.lon - lon;
+      const dist = Math.sqrt(dlat*dlat + dlon*dlon) * 111;
+      return { key, dist };
+    }).sort((a,b) => a.dist - b.dist).slice(0, 2);
+
+    const cats = [
+      {name:'Restoran', icon:'🍽️', query:'restaurant'},
+      {name:'Görməli',  icon:'🏛️', query:'tourist+attraction'},
+      {name:'Kafe',     icon:'☕',  query:'cafe'},
+      {name:'Otel',     icon:'🏨', query:'hotel'},
+      {name:'Park',     icon:'🌿', query:'park'},
+      {name:'Mağaza',   icon:'🛍️', query:'shopping+mall'},
+      {name:'Gecə',     icon:'🎭', query:'nightlife'},
+      {name:'Tibb',     icon:'🏥', query:'pharmacy'},
+    ];
+
+    const notifEnabled = typeof Notification !== "undefined" && Notification.permission === "granted";
+
+    list.innerHTML = `
+      <div style="margin-bottom:14px">
+        <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px">📍 Ətrafda axtar</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+          ${cats.map(cat => `<div onclick="window.open('https://www.google.com/maps/search/${cat.query}/@${lat},${lon},15z','_blank')" style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:10px 6px;text-align:center;cursor:pointer"><div style="font-size:24px;margin-bottom:4px">${cat.icon}</div><div style="font-size:10px;font-weight:700;color:var(--text2)">${cat.name}</div></div>`).join("")}
+        </div>
+      </div>
+
+      <div onclick="askNearbyAI(${lat},${lon})" style="background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;margin-bottom:14px">
+        <div style="font-size:24px">🤖</div>
+        <div><div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:white">AI Mənə Yer Tövsiyə Et</div><div style="font-size:11px;color:rgba(255,255,255,0.8)">Yaxınlıqdakı ən yaxşı yerlər</div></div>
+        <div style="margin-left:auto;color:white;font-size:18px">→</div>
+      </div>
+
+      ${!notifEnabled ? `<div style="background:linear-gradient(135deg,rgba(58,134,255,0.1),rgba(131,56,236,0.08));border:1px solid rgba(58,134,255,0.2);border-radius:14px;padding:14px;margin-bottom:14px;display:flex;align-items:center;gap:12px">
+        <div style="font-size:24px">🔔</div>
+        <div style="flex:1"><div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--text)">Yaxınlıq bildirişləri</div><div style="font-size:11px;color:var(--text2)">Maraqlı yer olanda xəbər al</div></div>
+        <button onclick="enableNotifications()" style="background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:10px;padding:8px 14px;color:white;font-size:12px;font-weight:700;cursor:pointer">Aktiv Et</button>
+      </div>` : `<div style="background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.3);border-radius:14px;padding:12px 14px;margin-bottom:14px;font-size:13px;color:var(--green);font-weight:600">🔔 Bildirişlər aktiv ✅</div>`}
+
+      ${withDist.length ? `<div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px">✈️ Yaxın Şəhərlər</div>${withDist.map(({key,dist})=>{const ci=CITIES[key]||{};return `<div class="nearby-card" onclick="openCity('${key}')"><div class="nearby-card-icon">${ci.flag||"🌍"}</div><div class="nearby-card-info"><div class="nearby-card-name">${ci.name||key}</div><div class="nearby-card-type">${ci.tagline||""}</div></div><div class="nearby-card-dist">${dist<1000?Math.round(dist)+' km':Math.round(dist/1000)+'K km'}</div></div>`;}).join("")}` : ""}`;
+
+  }, () => showNearbyFallback());
+}
+
+async function askNearbyAI(lat, lon) {
+  openAI();
+  setTimeout(async () => {
+    const prompt = `Mənim yerim: (${lat.toFixed(3)}, ${lon.toFixed(3)}).
+
+Bu yerə ən yaxın:
+1. **Top 3 Restoran** — ad, mətbəx, ~qiymət AZN, Google Maps linki
+2. **Top 3 Görməli Yer** — ad, niyə getməli, giriş haqqı
+3. **Top 2 Kafe** — ad, xüsusiyyəti
+
+Azərbaycan dilində, konkret yaz!`;
+    addUserMsg('📍 Yaxınlıqdakı ən yaxşı yerləri tap');
+    chatHistory.push({role:'user',content:prompt});
+    aiLoading=true; document.getElementById('sendBtn').disabled=true; showTyping();
+    try{ const r=await callAI(prompt,1000); hideTyping(); addAIMsg(r); chatHistory.push({role:'assistant',content:r}); }
+    catch(e){ hideTyping(); addAIMsg(getDemoReply('yaxınlıqdakı yerlər',e.message)); }
+    aiLoading=false; document.getElementById('sendBtn').disabled=false;
+  }, 300);
+}
+
+
+
+// =====================
+// 🔔 BİLDİRİŞ SİSTEMİ
+// =====================
+async function enableNotifications() {
+  if (!('Notification' in window)) { showToast('❌ Brauzer bildiriş dəstəkləmir'); return; }
+  const perm = await Notification.requestPermission();
+  if (perm === 'granted') {
+    localStorage.setItem('hg2_notif', '1');
+    showToast('✅ Bildirişlər aktiv edildi!');
+    scheduleSmartNotifications();
+    setTimeout(() => sendNotification('🌍 HaraGo AI Hazırdır!', 'Hara getmək istəyirsən? Planını hazırlayım!'), 1500);
+    // Nearby-i yenilə
+    loadNearby();
+  } else {
+    showToast('⚠️ İcazə verilmədi — brauzer ayarlarından aktivləşdir');
+  }
+}
+
+function sendNotification(title, body) {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  try {
+    const n = new Notification(title, { body, icon: '🌍', tag: 'harago-' + Date.now() });
+    n.onclick = () => { window.focus(); n.close(); };
+    setTimeout(() => n.close(), 8000);
+  } catch(e) {}
+}
+
+function scheduleSmartNotifications() {
+  const msgs = [
+    { title:'☀️ Günün xeyir!',          body:'Bugün hara getmək istəyirsən? AI planı hazırla.' },
+    { title:'✈️ Səyahət vaxtıdır!',      body:'Dubai, Paris, İstanbul... Haraya gedəcəksən?' },
+    { title:'🌍 Dünya sənin üçün gözləyir', body:'500 AZN ilə 3 günlük plan — 30 saniyədə!' },
+    { title:'🗺️ HaraGo AI',              body:'Yaxınlıqdakı görməli yerlərə bax.' },
+    { title:'🌆 Həftəsonu planın?',      body:'HaraGo AI ən yaxşı yeri sənin üçün tapacaq!' },
+  ];
+
+  // Səhər 9:00 bildiriş
+  const now = new Date();
+  const next9 = new Date(now);
+  next9.setHours(9,0,0,0);
+  if (now.getHours() >= 9) next9.setDate(next9.getDate()+1);
+
+  setTimeout(() => {
+    sendNotification(msgs[0].title, msgs[0].body);
+    setInterval(() => {
+      const m = msgs[Math.floor(Math.random()*msgs.length)];
+      sendNotification(m.title, m.body);
+    }, 24*60*60*1000);
+  }, next9 - now);
+
+  // Axşam 19:00 bildiriş
+  const next19 = new Date(now);
+  next19.setHours(19,0,0,0);
+  if (now.getHours() >= 19) next19.setDate(next19.getDate()+1);
+  setTimeout(() => {
+    sendNotification('🌆 Axşam tövsiyəsi', 'Həftəsonu haraya gedirsən? AI planını hazırla!');
+    setInterval(() => sendNotification('🌆 Axşam tövsiyəsi','Həftəsonu planın varmı?'), 24*60*60*1000);
+  }, next19 - now);
+}
+
+function checkLocationForNotification(lat, lon) {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  try {
+    const lastLat = parseFloat(localStorage.getItem('hg2_llat')||'0');
+    const lastLon = parseFloat(localStorage.getItem('hg2_llon')||'0');
+    const dist = Math.sqrt(Math.pow(lat-lastLat,2)+Math.pow(lon-lastLon,2))*111;
+    if (dist > 50) {
+      localStorage.setItem('hg2_llat', lat);
+      localStorage.setItem('hg2_llon', lon);
+      const nearest = Object.entries(CITY_WEATHER)
+        .map(([k,w])=>({k, d:Math.sqrt(Math.pow(w.lat-lat,2)+Math.pow(w.lon-lon,2))*111}))
+        .sort((a,b)=>a.d-b.d)[0];
+      if (nearest && nearest.d < 100 && CITIES[nearest.k]) {
+        const ci = CITIES[nearest.k];
+        sendNotification(`${ci.flag} ${ci.name}-a xoş gəldin!`, 'Yaxınlıqdakı ən yaxşı restoran və görməli yerlər üçün tap et.');
+      }
+    }
+  } catch(e) {}
+}
+
+// Startup-da bildiriş planlayıcısını başlat
+try {
+  if (localStorage.getItem('hg2_notif')==='1' && typeof Notification!=='undefined' && Notification.permission==='granted') {
+    scheduleSmartNotifications();
+  }
+} catch(e) {}
+
+function showNearbyFallback() {
+  const list = document.getElementById('nearbyList');
+  list.innerHTML = `<div style="text-align:center;padding:30px">
+    <div style="font-size:40px;margin-bottom:12px">📍</div>
+    <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--text);margin-bottom:8px">Yer icazəsi lazımdır</div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:16px">Brauzer ayarlarından yer icazəsi verin</div>
+    <div onclick="openAI()" style="background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:14px;padding:12px;color:white;font-weight:700;cursor:pointer;font-size:14px">
+      🤖 AI-dan tövsiyə al
+    </div>
+  </div>`;
+}
+
+// =====================
+// HOME GRID
+// =====================
+function buildCityGrid() {
+  // Trend scroll (horizontal)
+  const trendKeys = ['dubai','istanbul','paris','bali','tokyo','barcelona','santorini','prague','seoul','kyoto','maldives','rome'];
+  const trendEl = document.getElementById('trendScroll');
+  trendEl.innerHTML = trendKeys.map(key => {
+    const ci = CITIES[key] || { name: key, flag: '🌍' };
+    const photo = TREND_PHOTOS[key] || '';
+    return `<div class="city-card" onclick="openCity('${key}')">
+      ${photo
+        ? `<img src="${photo}" class="city-card-img" loading="lazy" alt="${ci.name}" onerror="this.style.display='none'">`
+        : `<div class="city-card-img flex-center" style="font-size:36px">${ci.flag}</div>`}
+      <div class="city-card-overlay">
+        <div class="city-card-name">${ci.flag} ${ci.name}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // City grid
+  const gridEl = document.getElementById('cityGrid');
+  document.getElementById('cityCount').textContent = POP_CITIES.length + ' şəhər';
+  gridEl.innerHTML = POP_CITIES.map(c => {
+    const photo = TREND_PHOTOS[c.key] || '';
+    return `<div class="city-tile" onclick="openCity('${c.key}')">
+      ${photo
+        ? `<img src="${photo}" class="city-tile-img" loading="lazy" alt="${c.name}" onerror="this.style.display='none'">`
+        : `<div class="city-tile-img flex-center" style="font-size:40px">${c.flag}</div>`}
+      <div class="city-tile-body">
+        <div class="city-tile-flag">${c.flag}</div>
+        <div class="city-tile-name">${c.name}</div>
+        <div class="city-tile-tag">${c.count}</div>
+        <div class="city-tile-weather" id="hw_${c.key}"></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  loadGridWeather();
+}
+
+async function loadGridWeather() {
+  const visible = POP_CITIES.slice(0, 12);
+  for (const city of visible) {
+    const w = CITY_WEATHER[city.key];
+    if (!w) continue;
+    try {
+      const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${w.lat}&longitude=${w.lon}&current_weather=true`);
+      const d = await res.json();
+      const t = d?.current_weather?.temperature;
+      const wc = d?.current_weather?.weathercode;
+      const icons = {0:'☀️',1:'🌤️',2:'⛅',3:'☁️',51:'🌦️',61:'🌧️',71:'❄️',95:'⛈️'};
+      const icon = icons[wc] || '🌡️';
+      const el = document.getElementById(`hw_${city.key}`);
+      if (el && t !== undefined) el.textContent = `${icon} ${Math.round(t)}°`;
+    } catch(e) {}
+  }
+}
+
+function showAllCities() {
+  document.getElementById('cityGrid').scrollIntoView({ behavior: 'smooth' });
+}
+
+
+// =====================
+// SETTINGS
+// =====================
+function openSettings(tab) {
+  document.getElementById('settingsOverlay').classList.add('open');
+  // Pre-fill proxy
+  try{
+    const pi = document.getElementById('proxyInput');
+    if(pi) pi.value = HG_PROXY || '';
+    const pb = document.getElementById('proxyStatusBadge');
+    if(pb && HG_PROXY){ pb.textContent='✅ Aktiv'; pb.style.color='var(--green)'; }
+  }catch(e){}
+
+  try {
+    const gk  = document.getElementById('groqKeyInput');
+    const gmk = document.getElementById('geminiKeyInput');
+    const ork = document.getElementById('orKeyInput');
+    const oms = document.getElementById('orModelSelect');
+    if(gk)  gk.value  = (GROQ_KEY && GROQ_KEY !== BK) ? GROQ_KEY : '';
+    if(gmk) gmk.value = GEMINI_KEY || '';
+    if(ork) ork.value = OR_KEY || '';
+    if(oms) oms.value = OR_MODEL;
+  } catch(e) {}
+  updateSettingsUI();
+}
+
+function closeSettings() {
+  document.getElementById('settingsOverlay').classList.remove('open');
+}
+
+function showProvider(name, el) {}  // no-op, kept for compat
+
+function switchProvTab(el, prov) {} // no-op
+
+function saveKey(prov) {
+  const keyMap = {
+    groq:   { el:'groqKeyInput',   prefix:'gsk_',  store:'hg2_groq'   },
+    gemini: { el:'geminiKeyInput', prefix:'AIza',  store:'hg2_gemini' },
+    or:     { el:'orKeyInput',     prefix:'sk-or', store:'hg2_or'     },
+  };
+  const cfg = keyMap[prov];
+  if (!cfg) return;
+  const key = document.getElementById(cfg.el)?.value.trim() || '';
+  if (!key) { showToast('⚠️ Açar daxil edin'); return; }
+  if (cfg.prefix && !key.startsWith(cfg.prefix)) {
+    showToast('❌ Açar ' + cfg.prefix + '... ilə başlamalıdır');
+    return;
+  }
+  if (prov === 'groq')   { GROQ_KEY   = key; }
+  if (prov === 'gemini') { GEMINI_KEY = key; }
+  if (prov === 'or')     {
+    OR_KEY   = key;
+    const oms = document.getElementById('orModelSelect');
+    if(oms) { OR_MODEL = oms.value; localStorage.setItem('hg2_or_model', OR_MODEL); }
+  }
+  localStorage.setItem(cfg.store, key);
+  ACTIVE_PROVIDER = prov;
+  updateSettingsUI();
+  closeSettings();
+  const names = {groq:'⚡ Groq', gemini:'🔵 Gemini', or:'🟢 OpenRouter'};
+  showToast('✅ ' + (names[prov]||prov) + ' aktiv oldu!');
+  testAI();
+}
+
+
+function closeSettings() {
+  document.getElementById('settingsOverlay').classList.remove('open');
+}
+
+function switchProvTab(el, prov) {
+  document.querySelectorAll('.prov-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.prov-panel').forEach(p => p.style.display = 'none');
+  const panel = document.getElementById('panel_' + prov);
+  if (panel) panel.style.display = 'block';
+}
+
+function saveKey(prov) {
+  const keyMap = {
+    groq:    { el: 'groqKeyInput',    prefix: 'gsk_',   store: 'hg2_groq' },
+    gemini:  { el: 'geminiKeyInput',  prefix: 'AIza',   store: 'hg2_gemini' },
+    copilot: { el: 'copilotKeyInput', prefix: '',       store: 'hg2_copilot' },
+    or:      { el: 'orKeyInput',      prefix: 'sk-or',  store: 'hg2_or' },
+  };
+  const cfg = keyMap[prov];
+  if (!cfg) return;
+  const key = document.getElementById(cfg.el)?.value.trim() || '';
+  if (!key) { showToast('Açar daxil edin'); return; }
+  if (cfg.prefix && !key.startsWith(cfg.prefix)) {
+    showToast('Açar ' + cfg.prefix + '... ilə başlamalıdır');
+    return;
+  }
+  if (prov === 'groq')    GROQ_KEY = key;
+  if (prov === 'gemini')  GEMINI_KEY = key;
+  if (prov === 'gpt')     GPT_KEY = key;
+  if (prov === 'copilot') {
+    COPILOT_KEY = key;
+    COPILOT_ENDPOINT = document.getElementById('copilotEpInput')?.value.trim() || '';
+    localStorage.setItem('hg2_copilot_ep', COPILOT_ENDPOINT);
+  }
+  if (prov === 'or') OR_KEY = key;
+  localStorage.setItem(cfg.store, key);
+  ACTIVE_PROVIDER = prov;
+  updateSettingsUI();
+  closeSettings();
+  const info = PROVIDER_INFO[prov] || {};
+  showToast((info.emoji||'') + ' ' + (info.name||prov) + ' aktiv! Test edilir...');
+  testAI();
+}
+
+async function runNetworkTest() {
+  const msgs = document.getElementById('aiMessages');
+  const div = document.createElement('div');
+  div.className = 'msg msg-ai';
+  div.innerHTML = '🔧 Bağlantı yoxlanır...';
+  msgs.appendChild(div);
+  scrollMsgs();
+
+  const results = [];
+
+  // Test 1: Internet
+  try {
+    const r = await fetch('https://api.frankfurter.app/latest?from=USD&to=AZN', { signal: AbortSignal.timeout(5000) });
+    results.push(r.ok ? '✅ İnternet bağlantısı: OK' : '⚠️ İnternet var amma cavab yox');
+  } catch(e) {
+    results.push('❌ İnternet bağlantısı: ' + e.message);
+  }
+
+  // Test 2: Groq reachability
+  if(GROQ_KEY) {
+    try {
+      const r = await fetch('https://api.groq.com/openai/v1/models', {
+        headers: { 'Authorization': `Bearer ${GROQ_KEY}` },
+        signal: AbortSignal.timeout(8000)
+      });
+      results.push(r.ok ? '✅ Groq API: Əlçatan' : `⚠️ Groq API: ${r.status} xəta`);
+    } catch(e) {
+      results.push('❌ Groq API: ' + e.message);
+    }
+  }
+
+  // Test 3: Gemini reachability
+  if(GEMINI_KEY) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${GEMINI_KEY}`;
+      const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
+      results.push(r.ok ? '✅ Gemini API: Əlçatan' : `⚠️ Gemini API: ${r.status}`);
+    } catch(e) {
+      results.push('❌ Gemini API: ' + e.message);
+    }
+  }
+
+  div.innerHTML = `**🔧 Bağlantı Test Nəticəsi**\n\n${results.join('\n')}\n\n` +
+    (results.some(r => r.startsWith('❌')) 
+      ? '_Problem var. WiFi ↔ Mobil data dəyişdir, ya da VPN sına._'
+      : '_Hər şey qaydasındadır! AI-a sual ver._');
+  div.innerHTML = md(div.innerHTML);
+  scrollMsgs();
+}
+
+async function testAI() {
+  try {
+    const reply = await callAI('Salam, bir cümlə ilə özünü tanıt.', 80);
+    showToast('✅ AI işləyir: ' + reply.slice(0, 40).replace(/\n/g, ' ') + '...');
+  } catch(e) {
+    showToast('❌ Xəta: ' + (e.detail || e.message || '').slice(0, 60));
+  }
+}
+
+function saveProxy() {
+  const url = (document.getElementById('proxyInput')?.value||'').trim().replace(/\/$/, '');
+  if (!url) { showToast('⚠️ URL daxil edin'); return; }
+  if (!url.startsWith('https://')) { showToast('❌ https:// ilə başlamalıdır'); return; }
+
+  HG_PROXY = url;
+  localStorage.setItem('hg2_proxy', url);
+
+  const badge = document.getElementById('proxyStatusBadge');
+  if(badge){ badge.textContent='⏳ Test...'; badge.style.color='#F97316'; }
+  showToast('⏳ Worker test edilir...');
+
+  xhrRequest(url + '/health', 'GET', {}, null)
+    .then(r => r.json())
+    .then(d => {
+      if(d.status === 'ok'){
+        const provs = Object.entries(d.providers||{}).filter(([,v])=>v).map(([k])=>k).join('+');
+        if(badge){ badge.textContent='✅ Aktiv'; badge.style.color='var(--green)'; }
+        ACTIVE_PROVIDER = 'relay';
+        updateSettingsUI();
+        closeSettings();
+        showToast('✅ Worker aktiv! ' + (provs||'AI hazır'));
+        setTimeout(testAI, 500);
+      } else { throw new Error('status not ok'); }
+    })
+    .catch(e => {
+      if(badge){ badge.textContent='❌ Xəta'; badge.style.color='var(--red)'; }
+      showToast('❌ Worker xətası: ' + (e.message||'').slice(0,40));
+    });
+}
+
+
+
+const PROVIDER_INFO = {
+  gemini:  { name:'Gemini 2.0 Flash', emoji:'🔵' },
+  or:      { name:'OpenRouter',       emoji:'🟢' },
+  groq:    { name:'Groq Llama 3.3',  emoji:'⚡' },
+  copilot: { name:'Copilot GPT-4o',  emoji:'🟣' },
+  relay:   { name:'Worker Relay',     emoji:'☁️' },
+  demo:    { name:'Demo',             emoji:'⚠️' },
+};
+
+function updateSettingsUI() {
+  const info = PROVIDER_INFO[ACTIVE_PROVIDER] || PROVIDER_INFO.demo;
+  const sub = document.getElementById('aiStatusSub');
+  const val = document.getElementById('aiStatusVal');
+  const dot = document.getElementById('aiDot');
+  const name = document.getElementById('aiProvName');
+  if (sub) sub.textContent = info.name + (ACTIVE_PROVIDER === 'demo' ? ' (acAr lazimdir)' : ' aktiv');
+  if (val) val.textContent = info.emoji;
+  if (dot) dot.style.background = ACTIVE_PROVIDER === 'demo' ? 'var(--orange)' : 'var(--green)';
+  if (name) name.textContent = info.name;
+}
+
+function updateAIBadge() { updateSettingsUI(); }
+
+function toggleTheme() {
+  isDark = !isDark;
+  localStorage.setItem('hg2_dark', isDark ? '1' : '0');
+  applyTheme();
+  document.getElementById('themeLabel').textContent = isDark ? 'Qaranlig Rejim' : 'Isiqli Rejim';
+  document.getElementById('themeVal').textContent = isDark ? 'Aktiv' : 'Deaktiv';
+}
+
+function applyTheme() {
+  document.documentElement.removeAttribute('data-theme');
+  if (!isDark) document.documentElement.setAttribute('data-theme', 'light');
+}
+
+function setLang(lang, el) {
+  LANG = lang;
+  localStorage.setItem('hg2_lang', lang);
+  document.querySelectorAll('.lang-opt').forEach(o => o.classList.remove('active'));
+  el?.classList.add('active');
+  showToast('Dil deyisdirildi');
+  closeSettings();
+}
+
+// =====================
+// VOICE INPUT
+// =====================
+function toggleMic() {
+  if (isRecording) { recognition?.stop(); return; }
+  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+    showToast('Brauzer mikrofon desteklemir'); return;
+  }
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SR();
+  const langMap = { az: 'az-AZ', ru: 'ru-RU', en: 'en-US', tr: 'tr-TR', ar: 'ar-SA', de: 'de-DE', fr: 'fr-FR' };
+  recognition.lang = langMap[LANG] || 'az-AZ';
+  recognition.interimResults = true;
+  recognition.onstart = () => {
+    isRecording = true;
+    document.getElementById('micBtn').classList.add('active');
+    document.getElementById('micBtn').textContent = '🔴';
+    showToast('Danissin...');
+  };
+  recognition.onresult = e => {
+    let txt = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) txt += e.results[i][0].transcript;
+    document.getElementById('aiInput').value = txt;
+  };
+  recognition.onend = () => {
+    isRecording = false;
+    document.getElementById('micBtn').classList.remove('active');
+    document.getElementById('micBtn').textContent = '🎤';
+    const txt = document.getElementById('aiInput').value.trim();
+    if (txt) sendMsg();
+  };
+  recognition.onerror = e => {
+    isRecording = false;
+    document.getElementById('micBtn').classList.remove('active');
+    document.getElementById('micBtn').textContent = '🎤';
+    const msgs = { 'not-allowed': 'Mikrofon icazesi verilmeyib', 'no-speech': 'Ses askarlanmadi' };
+    showToast(msgs[e.error] || 'Mikrofon xetasi');
+  };
+  recognition.start();
+}
+
+// =====================
+// UTILS
+// =====================
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function updateGreeting() {
+  const h = new Date().getHours();
+  const g = h < 12 ? 'Sabahınız xeyir' : h < 17 ? 'Günortanız xeyir' : 'Axşamınız xeyir';
+  const el = document.getElementById('homeGreeting');
+  if (el) el.textContent = g + '! 👋';
+}
+
+
+function init() {
+  applyTheme();
+  updateGreeting();
+  buildCityGrid();
+  updateSettingsUI();
+
+  // System dark mode
+  if (window.matchMedia) {
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    if (localStorage.getItem('hg2_dark') === null) {
+      isDark = mq.matches;
+      applyTheme();
+    }
+    mq.addEventListener('change', e => {
+      if (localStorage.getItem('hg2_dark') === null) {
+        isDark = e.matches;
+        applyTheme();
+      }
+    });
+  }
+
+  // Active lang
+  document.querySelectorAll('.lang-opt').forEach(o => {
+    const match = o.getAttribute('onclick')?.includes("'" + LANG + "'");
+    o.classList.toggle('active', !!match);
+  });
+}
+
+document.addEventListener('DOMContentLoaded', init);
+
+</script>
+</body>
+</html>
